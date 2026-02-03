@@ -12,39 +12,24 @@
 
   <hr>
 
-  <!-- MENU ITEMS (LIKES) -->
-  <h2>Menu</h2>
-  <div class="menu-item">
-    <span>Chicken Rice</span>
-    <button class="like-btn" data-item="chicken">❤️ <span class="like-count">0</span></button>
-  </div>
-
-  <hr>
-
   <!-- FEEDBACK FORM -->
   <h2>Leave a Review</h2>
   <form id="reviewForm">
-    <label>Rating (1-5):</label>
+    <label>Rating (1–5):</label><br>
     <input type="number" id="ratingInput" min="1" max="5" required>
     <br><br>
+
     <textarea id="commentInput" placeholder="Write your comment..." required></textarea>
     <br><br>
+
     <button type="submit">Submit Review</button>
   </form>
 
   <hr>
 
   <!-- REVIEWS LIST -->
-  <h2>Reviews</h2>
+  <h2>Customer Reviews</h2>
   <div id="reviewsList"></div>
-
-  <hr>
-
-  <!-- COMPLAINT -->
-  <h2>Submit Complaint</h2>
-  <textarea id="complaintInput" placeholder="Write your complaint..."></textarea>
-  <br><br>
-  <button id="submitComplaintBtn">Submit Complaint</button>
 
   <script src="script.js"></script>
 </body>

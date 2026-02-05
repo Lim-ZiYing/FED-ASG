@@ -119,7 +119,7 @@ function renderCartPage() {
     cart.forEach((item, index) => {
         total += item.price;
         const div = document.createElement("div");
-        div.className = "card";
+        div.className = "order-item";
         div.innerHTML = `
             <h4>${item.name}</h4>
             <p>${item.stall}</p>
@@ -153,24 +153,37 @@ function makePayment() {
     }
 }
 
-
 // -------- RESULT --------
 const resultText = document.getElementById("resultText");
+const result = localStorage.getItem("paymentResult"); // read result from storage
+let Cart = JSON.parse(localStorage.getItem("cart")) || [];
 
 if (resultText) {
-    const result = localStorage.getItem("paymentResult");
     if (result === "success") {
         resultText.textContent = "Payment Successful!";
-        cart = [];
-        saveCart();
-    } else {
+        cart = [];       // clear cart
+        localStorage.setItem("cart", JSON.stringify(cart)); // save empty cart
+    } else if (result === "fail") {
         resultText.textContent = "Payment Failed!";
+    }
+}
+
+// -------- PAYMENT --------
+function makePayment() {
+    const success = Math.random() > 0.3;
+    if (success) {
+        localStorage.setItem("paymentResult", "success");
+        window.location.href = "payment.html";
+    } else {
+        localStorage.setItem("paymentResult", "fail");
+        window.location.href = "payment.html?status=fail";
     }
 }
 
 function backHome() {
     location.href = "index.html";
 }
+
 
 // -------- STORAGE --------
 function saveCart() {

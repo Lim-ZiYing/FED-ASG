@@ -6,8 +6,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const KEY_INSPECTIONS = "nea_inspections";
   const KEY_STALLS = "hawker_stalls";
 
-  // 1) Seed stalls into localStorage if not existing (team shared data structure)
-  seedStallsIfEmpty();
 
   // 2) Get elements
   const stallSelect = document.getElementById("stallSelect");
@@ -43,24 +41,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ===== FUNCTIONS =====
 
-  function seedStallsIfEmpty() {
-    const existing = localStorage.getItem(KEY_STALLS);
-    if (existing) return;
-
-    // simple demo stalls (edit to match your project)
-    const demoStalls = [
-      { stallId: "S001", stallName: "Chicken Rice Stall" },
-      { stallId: "S002", stallName: "Noodle Stall" },
-      { stallId: "S003", stallName: "Indian Food Stall" }
-    ];
-
-    localStorage.setItem(KEY_STALLS, JSON.stringify(demoStalls));
-  }
-
   function getStalls() {
-    const raw = localStorage.getItem(KEY_STALLS);
-    return raw ? JSON.parse(raw) : [];
+  try {
+    return JSON.parse(localStorage.getItem("hawker_stalls")) || [];
+  } catch {
+    return [];
   }
+}
+
 
   function loadStalls() {
     const stalls = getStalls();

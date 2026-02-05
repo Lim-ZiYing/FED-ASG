@@ -1,22 +1,24 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Your Cart</title>
-    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <title>Cart</title>
+
+    <link rel="stylesheet" href="base.css">
+    <link rel="stylesheet" href="cart.css">
+    <link rel="stylesheet" href="checkout.css">
 </head>
 <body>
 
-<header>Your Cart</header>
+<header>Cart</header>
 
-<div class="menu" id="cartList"></div>
-
-<div class="cart-bar">
-    <div class="row">
-        <b id="cartTotal">Total: $0.00</b>
-        <button class="checkout-btn" onclick="goCheckout()">Checkout</button>
-    </div>
+<div id="checkoutView">
+    <!-- cart items rendered here -->
 </div>
+
+<button onclick="goCheckout()">Proceed to Payment</button>
 
 <script src="app.js"></script>
 </body>
 </html>
+

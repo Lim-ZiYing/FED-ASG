@@ -1,26 +1,18 @@
-
-<script src="app.js"></script>
-</body>
-</html><!DOCTYPE html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Checkout</title>
-    <link rel="stylesheet" href="style.css">
+
+    <link rel="stylesheet" href="base.css">
+    <link rel="stylesheet" href="checkout.css">
 </head>
 <body>
 
 <header>Checkout</header>
 
-<div class="menu">
-    <h3>Select Payment Method</h3>
-    <select id="paymentMethod">
-        <option>Credit Card</option>
-        <option>PayNow</option>
-        <option>Cash</option>
-    </select>
-
-    <br><br>
-    <button class="checkout-btn" onclick="confirmPayment()">Confirm Payment</button>
+<div id="checkoutView">
+    <button onclick="makePayment()">Make Payment</button>
 </div>
 
 <script src="app.js"></script>

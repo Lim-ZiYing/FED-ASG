@@ -1,18 +1,23 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Payment Result</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="base.css">
 </head>
 <body>
 
-<header>Payment Result</header>
+<h2 id="result"></h2>
 
-<div class="menu">
-    <h2 id="resultText"></h2>
-    <button class="checkout-btn" onclick="backHome()">Back to Home</button>
-</div>
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get("status");
 
-<script src="app.js"></script>
+    document.getElementById("result").innerText =
+        status === "success"
+        ? "Payment Successful"
+        : "Payment Failed";
+</script>
+
 </body>
 </html>

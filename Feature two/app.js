@@ -34,7 +34,7 @@ const stalls = [
 ];
 
 
-let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
 
 // -------- MENU PAGE --------
 const menuDiv = document.getElementById("menu");
@@ -84,8 +84,9 @@ function updateTotal() {
     totalPriceDiv.textContent = "Total: $" + total.toFixed(2);
 }
 
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
 function goCart() {
-    location.href = "cart.html";
+    window.location.href = "cart.html";
 }
 
 // -------- CART PAGE --------
@@ -122,16 +123,21 @@ function removeItem(index) {
     renderCartPage();
 }
 
+
 function goCheckout() {
-    location.href = "checkout.html";
+    window.location.href = "checkout.html";
 }
 
 // -------- CHECKOUT --------
-function confirmPayment() {
+function makePayment() {
     const success = Math.random() > 0.3;
-    localStorage.setItem("paymentResult", success ? "success" : "fail");
-    location.href = "result.html";
+    if (success) {
+        window.location.href = "payment.html?status=success";
+    } else {
+        window.location.href = "payment.html?status=fail";
+    }
 }
+
 
 // -------- RESULT --------
 const resultText = document.getElementById("resultText");

@@ -66,7 +66,7 @@ if (menuDiv) {
 
     updateTotal();
 }
-
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
 function addToCart(stallName, itemId) {
     const stall = stalls.find(s => s.name === stallName);
     const item = stall.items.find(i => i.id === itemId);
@@ -84,7 +84,7 @@ function updateTotal() {
     totalPriceDiv.textContent = "Total: $" + total.toFixed(2);
 }
 
-let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
 function goCart() {
     window.location.href = "cart.html";
 }

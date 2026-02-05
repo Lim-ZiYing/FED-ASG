@@ -11,7 +11,7 @@ const stalls = [
   { stallId: "S005", stallName: "Nasi Pandang", cuisine: "Indonesian", unit: "#01-27" }
 ];
 
-function seedStalls() {
+function Stalls() {
   let existing = [];
 
   try {
@@ -29,4 +29,4 @@ function seedStalls() {
   }
 }
 
-seedStalls();
+Stalls();

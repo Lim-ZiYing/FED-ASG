@@ -1,3 +1,4 @@
+// ================= MENU DATA =================
 const stalls = [
     {
         name: "Ah Hock Chicken Rice",
@@ -33,46 +34,47 @@ const stalls = [
     }
 ];
 
-
-
-
-// -------- MENU PAGE --------
+// ================= CART STORAGE =================
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
+// ================= MENU PAGE =================
 const menuDiv = document.getElementById("menu");
 const totalPriceDiv = document.getElementById("totalPrice");
 
 if (menuDiv) {
+    renderMenuPage();
+}
+
+function renderMenuPage() {
+    menuDiv.innerHTML = "";
     stalls.forEach(stall => {
         const stallDiv = document.createElement("div");
         stallDiv.className = "stall";
-        stallDiv.innerHTML = `<h3>${stall.name}</h3>`;
 
-        const itemsDiv = document.createElement("div");
-        itemsDiv.className = "items";
+        // Stall name
+        const h3 = document.createElement("h3");
+        h3.textContent = stall.name;
+        stallDiv.appendChild(h3);
 
+        // Items
         stall.items.forEach(item => {
-            const card = document.createElement("div");
-            card.className = "card";
+            const itemDiv = document.createElement("div");
+            itemDiv.className = "food";
 
-            const h4 = document.createElement("h4");
-            h4.textContent = item.name;
+            // Name + price container
+            const infoDiv = document.createElement("div");
+            infoDiv.innerHTML = `<span>${item.name}</span> <span style="margin-left: 10px;">$${item.price.toFixed(2)}</span>`;
+            itemDiv.appendChild(infoDiv);
 
-            const p = document.createElement("p");
-            p.textContent = `$${item.price.toFixed(2)}`;
-
+            // Add button
             const btn = document.createElement("button");
             btn.textContent = "Add";
             btn.addEventListener("click", () => addToCart(stall.name, item.id));
+            itemDiv.appendChild(btn);
 
-            card.appendChild(h4);
-            card.appendChild(p);
-            card.appendChild(btn);
-
-            itemsDiv.appendChild(card);
+            stallDiv.appendChild(itemDiv);
         });
 
-        stallDiv.appendChild(itemsDiv);
         menuDiv.appendChild(stallDiv);
     });
 
@@ -90,8 +92,7 @@ function addToCart(stallName, itemId) {
 
 function updateTotal() {
     if (!totalPriceDiv) return;
-    let total = 0;
-    cart.forEach(i => total += i.price);
+    const total = cart.reduce((sum, i) => sum + i.price, 0);
     totalPriceDiv.textContent = "Total: $" + total.toFixed(2);
 }
 
@@ -103,8 +104,7 @@ function goCart() {
     window.location.href = "cart.html";
 }
 
-
-// -------- CART PAGE --------
+// ================= CART PAGE =================
 const cartList = document.getElementById("cartList");
 const cartTotal = document.getElementById("cartTotal");
 
@@ -114,22 +114,22 @@ if (cartList) {
 
 function renderCartPage() {
     cartList.innerHTML = "";
-    let total = 0;
+    const total = cart.reduce((sum, item) => sum + item.price, 0);
 
     cart.forEach((item, index) => {
-        total += item.price;
         const div = document.createElement("div");
         div.className = "order-item";
+
         div.innerHTML = `
-            <h4>${item.name}</h4>
-            <p>${item.stall}</p>
-            <p>$${item.price.toFixed(2)}</p>
+            <div>${item.name} (${item.stall}) - $${item.price.toFixed(2)}</div>
             <button onclick="removeItem(${index})">Remove</button>
         `;
         cartList.appendChild(div);
     });
 
-    cartTotal.textContent = "Total: $" + total.toFixed(2);
+    if (cartTotal) {
+        cartTotal.textContent = "Total: $" + total.toFixed(2);
+    }
 }
 
 function removeItem(index) {
@@ -138,54 +138,36 @@ function removeItem(index) {
     renderCartPage();
 }
 
-
 function goCheckout() {
     window.location.href = "checkout.html";
 }
 
-// -------- CHECKOUT --------
-function makePayment() {
-    const success = Math.random() > 0.3;
-    if (success) {
-        window.location.href = "payment.html";
-    } else {
-        window.location.href = "payment.html?status=fail";
-    }
-}
-
-// -------- RESULT --------
-const resultText = document.getElementById("resultText");
-const result = localStorage.getItem("paymentResult"); // read result from storage
-let Cart = JSON.parse(localStorage.getItem("cart")) || [];
-
-if (resultText) {
-    if (result === "success") {
-        resultText.textContent = "Payment Successful!";
-        cart = [];       // clear cart
-        localStorage.setItem("cart", JSON.stringify(cart)); // save empty cart
-    } else if (result === "fail") {
-        resultText.textContent = "Payment Failed!";
-    }
-}
-
-// -------- PAYMENT --------
+// ================= CHECKOUT / PAYMENT =================
 function makePayment() {
     const success = Math.random() > 0.3;
     if (success) {
         localStorage.setItem("paymentResult", "success");
-        window.location.href = "payment.html";
     } else {
         localStorage.setItem("paymentResult", "fail");
-        window.location.href = "payment.html?status=fail";
     }
+    window.location.href = "payment.html";
+}
+
+// ================= PAYMENT RESULT =================
+const resultText = document.getElementById("resultText");
+const result = localStorage.getItem("paymentResult");
+
+if (resultText) {
+    if (result === "success") {
+        resultText.textContent = "Payment Successful!";
+        cart = [];
+        saveCart();
+    } else if (result === "fail") {
+        resultText.textContent = "Payment Failed!";
+    }
+    localStorage.removeItem("paymentResult"); // clear after showing
 }
 
 function backHome() {
     location.href = "index.html";
-}
-
-
-// -------- STORAGE --------
-function saveCart() {
-    localStorage.setItem("cart", JSON.stringify(cart));
 }

@@ -37,6 +37,8 @@ const stalls = [
 
 
 // -------- MENU PAGE --------
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
 const menuDiv = document.getElementById("menu");
 const totalPriceDiv = document.getElementById("totalPrice");
 
@@ -52,11 +54,21 @@ if (menuDiv) {
         stall.items.forEach(item => {
             const card = document.createElement("div");
             card.className = "card";
-            card.innerHTML = `
-                <h4>${item.name}</h4>
-                <p>$${item.price.toFixed(2)}</p>
-                <button onclick="addToCart('${stall.name}', ${item.id})">Add</button>
-            `;
+
+            const h4 = document.createElement("h4");
+            h4.textContent = item.name;
+
+            const p = document.createElement("p");
+            p.textContent = `$${item.price.toFixed(2)}`;
+
+            const btn = document.createElement("button");
+            btn.textContent = "Add";
+            btn.addEventListener("click", () => addToCart(stall.name, item.id));
+
+            card.appendChild(h4);
+            card.appendChild(p);
+            card.appendChild(btn);
+
             itemsDiv.appendChild(card);
         });
 
@@ -78,16 +90,19 @@ function addToCart(stallName, itemId) {
 
 function updateTotal() {
     if (!totalPriceDiv) return;
-
     let total = 0;
     cart.forEach(i => total += i.price);
     totalPriceDiv.textContent = "Total: $" + total.toFixed(2);
 }
 
-let cart = JSON.parse(localStorage.getItem("cart")) || [];
+function saveCart() {
+    localStorage.setItem("cart", JSON.stringify(cart));
+}
+
 function goCart() {
     window.location.href = "cart.html";
 }
+
 
 // -------- CART PAGE --------
 const cartList = document.getElementById("cartList");

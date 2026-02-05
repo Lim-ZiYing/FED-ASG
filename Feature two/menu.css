@@ -18,10 +18,15 @@
     margin-bottom: 12px;
 
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    justify-content: space-between; /* keeps name on left, button on right */
+    align-items: center;            /* vertically center all items */
 }
 
+/* Optional: make text vertically centered inside flex */
+.food div {
+    display: flex;
+    align-items: center;
+}
 .food button {
     border: none;
     background: black;

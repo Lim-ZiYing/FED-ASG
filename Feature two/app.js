@@ -139,11 +139,11 @@ const resultText = document.getElementById("resultText");
 if (resultText) {
     const result = localStorage.getItem("paymentResult");
     if (result === "success") {
-        resultText.textContent = "✅ Payment Successful!";
+        resultText.textContent = "Payment Successful!";
         cart = [];
         saveCart();
     } else {
-        resultText.textContent = "❌ Payment Failed!";
+        resultText.textContent = "Payment Failed!";
     }
 }
 

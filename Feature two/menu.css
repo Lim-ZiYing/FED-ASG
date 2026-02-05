@@ -1,0 +1,36 @@
+#menuView {
+    padding: 16px;
+}
+
+.stall {
+    margin-bottom: 24px;
+}
+
+.stall h2 {
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.food {
+    background: #e0e0e0;
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 12px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.food button {
+    border: none;
+    background: black;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.food button:hover {
+    opacity: 0.8;
+}

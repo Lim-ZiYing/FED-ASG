@@ -1,6 +1,6 @@
 const stalls = [
     {
-        name: "Chicken Rice Stall",
+        name: "Ah Hock Chicken Rice",
         items: [
             { id: 1, name: "Roasted Chicken Rice", price: 4.50 },
             { id: 2, name: "Steamed Chicken Rice", price: 4.00 },
@@ -8,7 +8,7 @@ const stalls = [
         ]
     },
     {
-        name: "Noodle Stall",
+        name: "Mdm Tan Noodles",
         items: [
             { id: 4, name: "Laksa", price: 5.50 },
             { id: 5, name: "Wanton Mee", price: 5.00 },

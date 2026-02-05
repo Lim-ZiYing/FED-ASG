@@ -1,0 +1,31 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #f1faee;
+    margin: 0;
+}
+
+header {
+    background-color: #2a9d8f;
+    color: white;
+    padding: 1rem;
+    text-align: center;
+}
+
+main {
+    max-width: 700px;
+    margin: 20px auto;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+input, button {
+    padding: 8px;
+    margin: 5px 0;
+}
+
+button {
+    background-color: #264653;
+    color: white;
+    border: none;
+}

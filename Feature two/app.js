@@ -132,7 +132,7 @@ function goCheckout() {
 function makePayment() {
     const success = Math.random() > 0.3;
     if (success) {
-        window.location.href = "payment.html?status=success";
+        window.location.href = "payment.html";
     } else {
         window.location.href = "payment.html?status=fail";
     }

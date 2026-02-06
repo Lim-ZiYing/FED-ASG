@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-
-// -------- MENU PAGE --------
-=======
 const stalls = [
     {
         name: "Ah Hock Chicken Rice",
@@ -38,7 +34,7 @@ const stalls = [
 ];
 
 
->>>>>>> 2fe7be5b55408d65d89ecc4d7f461deebe465f71
+
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
 

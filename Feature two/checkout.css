@@ -1,29 +1,39 @@
 .checkout-item{
-  background:#e6e6e6;
+  background:#fff;
+  border:1px solid #ddd;
   border-radius:12px;
-  padding:12px;
-  margin-bottom:10px;
+  padding:14px;
+  margin-bottom: 10px;
 }
 
-.section{
-  background:#f7f7f7;
+.panel{
+  background:#fff;
+  border:1px solid #ddd;
   border-radius:12px;
-  padding:12px;
-  margin-top:12px;
+  padding:14px;
+  margin-top: 14px;
 }
 
-.section h4{
-  margin:8px 0;
+.panel h3{
+  margin: 8px 0;
 }
 
 .row{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  padding:8px 0;
-  border-bottom:1px solid #e3e3e3;
+  padding:10px 0;
+  border-bottom:1px solid #eee;
 }
 
 .row:last-child{
   border-bottom:none;
+}
+
+.order-card{
+  background:#fff;
+  border:1px solid #ddd;
+  border-radius:12px;
+  padding:14px;
+  margin-bottom: 12px;
 }

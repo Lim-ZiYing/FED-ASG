@@ -1,13 +1,12 @@
-// ===== Simple Student Version (Merged + Working) =====
+
 
 document.addEventListener("DOMContentLoaded", () => {
 
-  // localStorage keys
   const KEY_INSPECTIONS = "nea_inspections";
   const KEY_STALLS = "hawker_stalls";
 
 
-  // 2) Get elements
+
   const stallSelect = document.getElementById("stallSelect");
   const officerName = document.getElementById("officerName");
   const clean = document.getElementById("clean");
@@ -24,14 +23,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const historyBody = document.getElementById("historyBody");
   const gradeFilter = document.getElementById("gradeFilter");
 
-  // 3) Load stalls from localStorage into dropdown
+
   loadStalls();
 
-  // 4) Init preview + table
+
   updatePreview();
   renderHistory();
 
-  // 5) Listeners
+
   [clean, handle, pest, storage].forEach(input => {
     input.addEventListener("input", updatePreview);
   });
@@ -105,7 +104,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // range check
+  
     if (clean.value < 0 || clean.value > 30) return showRangeError("Cleanliness must be 0–30");
     if (handle.value < 0 || handle.value > 30) return showRangeError("Food Handling must be 0–30");
     if (pest.value < 0 || pest.value > 20) return showRangeError("Pest Control must be 0–20");
@@ -144,7 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
     list.unshift(inspection);
     writeInspections(list);
 
-    // reset
+
     clean.value = 0;
     handle.value = 0;
     pest.value = 0;
@@ -181,7 +180,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <td><button data-id="${item.id}">Delete</button></td>
       `;
 
-      // simple delete button (no inline onclick)
+
       tr.querySelector("button").addEventListener("click", () => {
         deleteOne(item.id);
       });

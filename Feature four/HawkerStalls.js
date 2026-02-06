@@ -1,5 +1,3 @@
-// This file seeds stall data into localStorage
-// Safe: seeds if missing OR empty OR broken JSON
 
 const STALL_KEY = "hawker_stalls";
 

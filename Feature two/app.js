@@ -1,4 +1,3 @@
-// ================= MENU DATA =================
 const stalls = [
     {
         name: "Ah Hock Chicken Rice",
@@ -34,10 +33,10 @@ const stalls = [
     }
 ];
 
-// ================= CART STORAGE =================
+
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-// ================= MENU PAGE =================
+
 const menuDiv = document.getElementById("menu");
 const totalPriceDiv = document.getElementById("totalPrice");
 
@@ -51,22 +50,22 @@ function renderMenuPage() {
         const stallDiv = document.createElement("div");
         stallDiv.className = "stall";
 
-        // Stall name
+     
         const h3 = document.createElement("h3");
         h3.textContent = stall.name;
         stallDiv.appendChild(h3);
 
-        // Items
+
         stall.items.forEach(item => {
             const itemDiv = document.createElement("div");
             itemDiv.className = "food";
 
-            // Name + price container
+
             const infoDiv = document.createElement("div");
             infoDiv.innerHTML = `<span>${item.name}</span> <span style="margin-left: 10px;">$${item.price.toFixed(2)}</span>`;
             itemDiv.appendChild(infoDiv);
 
-            // Add button
+
             const btn = document.createElement("button");
             btn.textContent = "Add";
             btn.addEventListener("click", () => addToCart(stall.name, item.id));
@@ -104,7 +103,7 @@ function goCart() {
     window.location.href = "cart.html";
 }
 
-// ================= CART PAGE =================
+
 const cartList = document.getElementById("cartList");
 const cartTotal = document.getElementById("cartTotal");
 
@@ -142,7 +141,7 @@ function goCheckout() {
     window.location.href = "checkout.html";
 }
 
-// ================= CHECKOUT / PAYMENT =================
+
 function makePayment() {
     const success = Math.random() > 0.3;
     if (success) {
@@ -153,7 +152,7 @@ function makePayment() {
     window.location.href = "payment.html";
 }
 
-// ================= PAYMENT RESULT =================
+
 const resultText = document.getElementById("resultText");
 const result = localStorage.getItem("paymentResult");
 
@@ -165,7 +164,7 @@ if (resultText) {
     } else if (result === "fail") {
         resultText.textContent = "Payment Failed!";
     }
-    localStorage.removeItem("paymentResult"); // clear after showing
+    localStorage.removeItem("paymentResult"); 
 }
 
 function backHome() {

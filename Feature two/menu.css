@@ -1,35 +1,21 @@
-.stall{
-  margin-bottom:16px;
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f4f4;
 }
 
-.stall h3{
-  margin:6px 0 10px;
+.topbar {
+  padding: 16px 24px;
+  font-size: 20px;
+  font-weight: bold;
+  background: white;
+  border-bottom: 1px solid #ddd;
 }
 
-.food-row{
-  display:grid;
-  grid-template-columns: 1fr auto auto;
-  gap:10px;
-  align-items:center;
-  background:#e6e6e6;
-  border-radius:12px;
-  padding:12px;
-  margin-bottom:10px;
+.container {
+  padding: 24px;
 }
 
-.food-name{
-  font-weight:600;
-}
-
-.food-price{
-  font-weight:700;
-}
-
-.pill{
-  border:none;
-  padding:8px 14px;
-  border-radius:999px;
-  background:#000;
-  color:#fff;
-  font-weight:700;
+button {
+  cursor: pointer;
 }

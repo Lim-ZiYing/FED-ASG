@@ -7,12 +7,16 @@
 </head>
 <body>
 
-<header>Order History</header>
+<header class="topbar">Order History</header>
 
-<div id="ordersList"></div>
+<main class="container">
+  <div id="orderHistory"></div>
+</main>
 
-<button onclick="goBack()">Back to Menu</button>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="firebase.js"></script>
+<script src="orderhistory.js"></script>
 
-<script type="module" src="ordershistory.js"></script>
 </body>
 </html>

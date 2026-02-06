@@ -1,33 +1,12 @@
 .cart-bar {
-    position: fixed;
-    bottom: 12px;
-    left: 12px;
-    right: 12px;
-
-    background: #e6e6e6;
-    border-radius: 30px;
-    padding: 14px 18px;
-
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-}
-
-.cart-bar span {
-    font-weight: bold;
-}
-
-.cart-bar button {
-    border: none;
-    background: black;
-    color: white;
-    padding: 8px 18px;
-    border-radius: 20px;
-    cursor: pointer;
-}
-
-.cart-bar button:hover {
-    opacity: 0.85;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 1px solid #ddd;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }

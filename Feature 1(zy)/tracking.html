@@ -4,50 +4,172 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Order Tracking</title>
-  <link rel="stylesheet" href="style.css"/>
+  <style>
+    :root{
+      --bg:#f5f7fb;
+      --card:#ffffff;
+      --line:#e5e7eb;
+      --muted:#6b7280;
+      --accent:#2563eb;
+      --text:#111827;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,BlinkMacSystemFont;
+      background:var(--bg);
+      color:var(--text);
+    }
+    .topbar{
+      background:#fff;
+      border-bottom:1px solid var(--line);
+      padding:14px 20px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-weight:800;
+    }
+    .container{
+      max-width:900px;
+      margin:24px auto;
+      padding:0 16px;
+    }
+    .card{
+      background:var(--card);
+      border-radius:16px;
+      padding:20px;
+      box-shadow:0 8px 24px rgba(0,0,0,.05);
+    }
+    .divider{ height:1px; background:var(--line); margin:16px 0; }
+    .row{ display:flex; gap:12px; flex-wrap:wrap; }
+    .kv{ display:flex; gap:40px; margin-top:12px; flex-wrap:wrap; }
+    .muted{ color:var(--muted); font-size:14px; }
+    .btn{
+      padding:10px 16px;
+      border-radius:10px;
+      border:1px solid var(--line);
+      background:#fff;
+      cursor:pointer;
+      font-weight:600;
+    }
+    .btn-primary{ background:var(--accent); color:#fff; border:none; }
+    .btn-outline{ border:1px solid var(--accent); color:var(--accent); }
+    .btn-ghost{ border:none; background:#f3f4f6; }
+    .tag{
+      display:inline-block;
+      padding:6px 12px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      font-weight:600;
+      margin-top:8px;
+    }
+    .tag.green{ border-color:#22c55e; color:#22c55e; }
+
+    /* timeline */
+    .timeline{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:18px;
+      padding:18px 6px 8px;
+    }
+    .t-step{
+      flex:1;
+      position:relative;
+      display:flex;
+      align-items:flex-start;
+      gap:10px;
+      color:var(--muted);
+    }
+    .t-step::after{
+      content:"";
+      position:absolute;
+      left:28px;
+      right:-12px;
+      top:12px;
+      height:3px;
+      background:var(--line);
+      border-radius:999px;
+      z-index:0;
+    }
+    .t-step:last-child::after{ display:none; }
+    .t-dot{
+      width:22px;
+      height:22px;
+      border-radius:999px;
+      border:2px solid var(--line);
+      background:#fff;
+      z-index:2;
+      flex:0 0 22px;
+    }
+    .t-label{
+      font-weight:800;
+      background:var(--card);
+      padding:2px 6px;
+      border-radius:8px;
+      z-index:2;
+    }
+    .t-step.active{ color:var(--accent); }
+    .t-step.active .t-dot{
+      border-color:var(--accent);
+      background:rgba(37,99,235,.15);
+    }
+    .t-step.active::after{ background:rgba(37,99,235,.45); }
+
+    /* small status box */
+    .notice{
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:#fff;
+      font-size:14px;
+      color:var(--muted);
+      margin-top:12px;
+    }
+  </style>
 </head>
 <body>
 
 <header class="topbar">
   <div class="brand">
     <span class="logo">🍜</span>
-    <span class="appname" data-i18n="appTitle">Hawker Hub</span>
-  </div>
-  <div class="top-actions">
-    <a class="btn btn-ghost" href="stall.html">← <span data-i18n="backStall">Stall</span></a>
-    <button id="langToggle" class="btn btn-ghost" type="button">EN / 中文</button>
+    <span class="appname">Hawker Hub</span>
   </div>
 </header>
 
 <main class="container">
   <section class="card">
-    <h2 data-i18n="tracking">Order Tracking</h2>
+    <h2>Order Tracking</h2>
+
+    <div class="kv">
+      <div>
+        <div class="muted">order number / ID</div>
+        <strong id="orderId">—</strong>
+      </div>
+      <div>
+        <div class="muted">status</div>
+        <strong id="orderStatus">—</strong>
+      </div>
+    </div>
 
     <div class="divider"></div>
 
-    <!-- Order info -->
-    <p class="muted">order number / ID</p>
-    <h3 id="orderId">—</h3>
-
-    <p class="muted">status</p>
-    <h3 id="orderStatus">—</h3>
-
-    <div class="divider"></div>
-
-    <!-- TIMELINE -->
-    <p class="muted">the time line</p>
+    <div class="muted">the time line</div>
 
     <div class="timeline">
       <div id="step0" class="t-step">
         <div class="t-dot"></div>
         <div class="t-label">Preparing</div>
       </div>
-
       <div id="step1" class="t-step">
         <div class="t-dot"></div>
         <div class="t-label">Ready</div>
       </div>
-
       <div id="step2" class="t-step">
         <div class="t-dot"></div>
         <div class="t-label">Completed</div>
@@ -56,39 +178,205 @@
 
     <div class="divider"></div>
 
-    <!-- Buttons -->
-    <div style="display:flex; gap:10px; flex-wrap:wrap;">
-      <button id="newOrderBtn" class="btn btn-primary">
-        Create New Order
-      </button>
-      <button id="advanceStatusBtn" class="btn btn-outline">
-        Advance Status
-      </button>
-      <button id="resetOrderBtn" class="btn">
-        Reset Order
-      </button>
+    <div class="row">
+      <button id="newOrderBtn" class="btn btn-primary">Create New Order</button>
+      <button id="advanceStatusBtn" class="btn btn-outline">Advance Status</button>
+      <button id="resetOrderBtn" class="btn btn-ghost">Reset Order</button>
     </div>
 
-    <div class="divider"></div>
-
-    <!-- Reward -->
-    <div class="card">
-      <h3>Any reward earned</h3>
-      <p class="muted">Simulated reward display.</p>
-      <span class="tag" style="border-color:#16a34a;color:#16a34a;">+10 pts</span>
-    </div>
-
-    <div class="divider"></div>
-
-    <!-- Payment -->
-    <div class="card">
-      <h3>Payment info & amount</h3>
-      <p class="muted">Payment is simulated (handled by other team).</p>
-      <span class="tag">S$ 12.50</span>
-    </div>
+    <div id="backendMsg" class="notice">Backend: loading…</div>
   </section>
 </main>
 
-<script src="app.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    addDoc,
+    doc,
+    setDoc,
+    getDoc,
+    onSnapshot,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  // ✅ your firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyAL8H-6QQcdpIKnZynqdVYnBjSXNdYaCKE",
+    authDomain: "fed-assignment-607f5.firebaseapp.com",
+    projectId: "fed-assignment-607f5",
+    storageBucket: "fed-assignment-607f5.firebasestorage.app",
+    messagingSenderId: "865290865679",
+    appId: "1:865290865679:web:fa9903ebfb2705f3b8a77a",
+    measurementId: "G-CH6JWEQ7E2"
+  };
+
+  const qs = (id)=>document.getElementById(id);
+
+  // ---- Local fallback (now stores docId too)
+  const LS_KEY = "orderTrackingV2";
+  const loadLocal = ()=>{
+    try {
+      return JSON.parse(localStorage.getItem(LS_KEY)) || { orderDocId:"", orderId:"", statusIndex:-1 };
+    } catch {
+      return { orderDocId:"", orderId:"", statusIndex:-1 };
+    }
+  };
+  const saveLocal = (v)=> localStorage.setItem(LS_KEY, JSON.stringify(v));
+
+  const statusName = (i)=>{
+    if(i===0) return "Preparing";
+    if(i===1) return "Ready";
+    if(i===2) return "Completed";
+    return "—";
+  };
+
+  let currentOrder = loadLocal();
+  let db = null;
+  let unsub = null;
+  let firebaseOk = false;
+
+  const setBackendMsg = (txt)=> qs("backendMsg").textContent = txt;
+
+  const render = ()=>{
+    qs("orderId").textContent = currentOrder.orderId || "—";
+    qs("orderStatus").textContent = statusName(currentOrder.statusIndex);
+
+    ["step0","step1","step2"].forEach((id,idx)=>{
+      const el = qs(id);
+      el.classList.toggle("active", currentOrder.statusIndex >= idx && currentOrder.statusIndex !== -1);
+    });
+  };
+
+  // Listen to Firestore doc by DOC ID (auto id)
+  const listenOrderDoc = (orderDocId)=>{
+    if(!firebaseOk || !orderDocId) return;
+    if(unsub) unsub();
+
+    const ref = doc(db, "orders", orderDocId);
+    unsub = onSnapshot(ref, (snap)=>{
+      if(!snap.exists()) return;
+      const d = snap.data();
+      currentOrder = {
+        orderDocId: snap.id,
+        orderId: d.orderId || currentOrder.orderId,
+        statusIndex: typeof d.statusIndex === "number" ? d.statusIndex : currentOrder.statusIndex
+      };
+      saveLocal(currentOrder);
+      render();
+    });
+  };
+
+  // Update the SAME doc (merge)
+  const writeOrderDoc = async ()=>{
+    if(!firebaseOk || !currentOrder.orderDocId) return;
+    const ref = doc(db, "orders", currentOrder.orderDocId);
+    await setDoc(ref, {
+      orderId: currentOrder.orderId,
+      statusIndex: currentOrder.statusIndex,
+      statusText: statusName(currentOrder.statusIndex),
+      updatedAt: serverTimestamp()
+    }, { merge:true });
+  };
+
+  // ---- init firebase safely
+  try{
+    const app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+    firebaseOk = true;
+    setBackendMsg("Backend: Firebase Firestore connected ✅");
+  }catch(e){
+    firebaseOk = false;
+    setBackendMsg("Backend: Firebase failed, using localStorage only ⚠️");
+    console.warn(e);
+  }
+
+  // ---- initial render
+  render();
+
+  // If saved order exists, try to load + listen to doc
+  if(firebaseOk && currentOrder.orderDocId){
+    try{
+      const ref = doc(db, "orders", currentOrder.orderDocId);
+      const snap = await getDoc(ref);
+      if(snap.exists()){
+        const d = snap.data();
+        currentOrder = {
+          orderDocId: snap.id,
+          orderId: d.orderId || currentOrder.orderId,
+          statusIndex: typeof d.statusIndex === "number" ? d.statusIndex : currentOrder.statusIndex
+        };
+        saveLocal(currentOrder);
+        render();
+      }
+      listenOrderDoc(currentOrder.orderDocId);
+    }catch(e){
+      console.warn("Firestore read failed, local only", e);
+      setBackendMsg("Backend: Firestore rules/network blocked, using localStorage only ⚠️");
+    }
+  }
+
+  // ---- buttons
+  qs("newOrderBtn").addEventListener("click", async ()=>{
+    // create visible order number immediately
+    const orderNo = "ORD-" + Math.floor(1000 + Math.random()*9000);
+    currentOrder = { orderDocId:"", orderId: orderNo, statusIndex: 0 };
+    saveLocal(currentOrder);
+    render();
+
+    if(firebaseOk){
+      try{
+        // ✅ create Firestore doc with AUTO id (teammate style)
+        const docRef = await addDoc(collection(db, "orders"), {
+          orderId: orderNo,
+          statusIndex: 0,
+          statusText: "Preparing",
+          createdAt: serverTimestamp(),
+
+          // optional fields (matches your teammate's screenshot style)
+          fees: { delivery: 0, takeaway: 0 },
+          items: [
+            { id: 1, name: "Steamed Chicken Rice", price: 4, qty: 1, stall: "Ah Hock Chicken Rice" }
+          ]
+        });
+
+        currentOrder.orderDocId = docRef.id;
+        saveLocal(currentOrder);
+        render();
+
+        listenOrderDoc(docRef.id);
+      }catch(e){
+        console.warn("Firestore write blocked", e);
+        setBackendMsg("Backend: Firestore write blocked (rules). Using localStorage only ⚠️");
+      }
+    }
+  });
+
+  qs("advanceStatusBtn").addEventListener("click", async ()=>{
+    if(!currentOrder.orderId) return alert("Create a new order first.");
+    currentOrder.statusIndex = Math.min(2, currentOrder.statusIndex + 1);
+    saveLocal(currentOrder);
+    render();
+
+    if(firebaseOk){
+      try{
+        await writeOrderDoc();
+      }catch(e){
+        console.warn("Firestore update blocked", e);
+        setBackendMsg("Backend: Firestore write blocked (rules). Using localStorage only ⚠️");
+      }
+    }
+  });
+
+  qs("resetOrderBtn").addEventListener("click", ()=>{
+    currentOrder = { orderDocId:"", orderId:"", statusIndex:-1 };
+    saveLocal(currentOrder);
+    render();
+    if(unsub) unsub();
+    unsub = null;
+  });
+</script>
+
 </body>
 </html>

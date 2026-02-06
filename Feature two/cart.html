@@ -1,24 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Cart</title>
+  <meta charset="UTF-8" />
+  <title>Cart</title>
 
-    <link rel="stylesheet" href="base.css">
-    <link rel="stylesheet" href="cart.css">
-    <link rel="stylesheet" href="checkout.css">
+  <link rel="stylesheet" href="base.css" />
+  <link rel="stylesheet" href="cart.css" />
 </head>
 <body>
 
-<header>Cart</header>
+  <div class="phone">
+    <header class="topbar">Cart</header>
 
-<div id="cartList"></div>
-<h3 id="cartTotal">Total: $0.00</h3>
+    <main class="content">
+      <div id="cartList"></div>
+      <h3 id="cartTotal">Total: $0.00</h3>
 
-<button onclick="goCheckout()">Proceed to Payment</button>
+      <button class="primary" onclick="goCheckout()">Proceed to Payment</button>
+      <button class="secondary" onclick="backMenu()">Back to Menu</button>
+    </main>
+  </div>
 
-<script type="module" src="app.js"></script>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+  <script src="firebase.js"></script>
+  <script src="app.js"></script>
 
 </body>
 </html>
-

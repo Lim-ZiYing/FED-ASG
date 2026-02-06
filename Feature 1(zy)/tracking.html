@@ -7,73 +7,88 @@
   <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand">
-      <span class="logo">🍜</span>
-      <span class="appname" data-i18n="appTitle">Hawker Hub</span>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">🍜</span>
+    <span class="appname" data-i18n="appTitle">Hawker Hub</span>
+  </div>
+  <div class="top-actions">
+    <a class="btn btn-ghost" href="stall.html">← <span data-i18n="backStall">Stall</span></a>
+    <button id="langToggle" class="btn btn-ghost" type="button">EN / 中文</button>
+  </div>
+</header>
+
+<main class="container">
+  <section class="card">
+    <h2 data-i18n="tracking">Order Tracking</h2>
+
+    <div class="divider"></div>
+
+    <!-- Order info -->
+    <p class="muted">order number / ID</p>
+    <h3 id="orderId">—</h3>
+
+    <p class="muted">status</p>
+    <h3 id="orderStatus">—</h3>
+
+    <div class="divider"></div>
+
+    <!-- TIMELINE -->
+    <p class="muted">the time line</p>
+
+    <div class="timeline">
+      <div id="step0" class="t-step">
+        <div class="t-dot"></div>
+        <div class="t-label">Preparing</div>
+      </div>
+
+      <div id="step1" class="t-step">
+        <div class="t-dot"></div>
+        <div class="t-label">Ready</div>
+      </div>
+
+      <div id="step2" class="t-step">
+        <div class="t-dot"></div>
+        <div class="t-label">Completed</div>
+      </div>
     </div>
-    <div class="top-actions">
-      <a class="btn btn-ghost" href="stall.html">← Stall</a>
-      <button id="langToggle" class="btn btn-ghost" type="button">EN / 中文</button>
+
+    <div class="divider"></div>
+
+    <!-- Buttons -->
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <button id="newOrderBtn" class="btn btn-primary">
+        Create New Order
+      </button>
+      <button id="advanceStatusBtn" class="btn btn-outline">
+        Advance Status
+      </button>
+      <button id="resetOrderBtn" class="btn">
+        Reset Order
+      </button>
     </div>
-  </header>
 
-  <main class="container">
-    <section class="card">
-      <div class="section-title">
-        <h2 data-i18n="tracking">Order Tracking</h2>
-      </div>
+    <div class="divider"></div>
 
-      <div class="stall-header">
-        <div>
-          <div class="muted small">order number / ID</div>
-          <div id="orderId" class="big">—</div>
-        </div>
-        <div>
-          <div class="muted small">status</div>
-          <div id="orderStatus" class="big">—</div>
-        </div>
-      </div>
+    <!-- Reward -->
+    <div class="card">
+      <h3>Any reward earned</h3>
+      <p class="muted">Simulated reward display.</p>
+      <span class="tag" style="border-color:#16a34a;color:#16a34a;">+10 pts</span>
+    </div>
 
-      <div class="divider"></div>
+    <div class="divider"></div>
 
-      <div class="muted small">the time line</div>
-      <div class="progress" style="margin-top:10px;">
-        <div class="step" id="step0">Preparing</div>
-        <div class="line"></div>
-        <div class="step" id="step1">Ready</div>
-        <div class="line"></div>
-        <div class="step" id="step2">Completed</div>
-      </div>
+    <!-- Payment -->
+    <div class="card">
+      <h3>Payment info & amount</h3>
+      <p class="muted">Payment is simulated (handled by other team).</p>
+      <span class="tag">S$ 12.50</span>
+    </div>
+  </section>
+</main>
 
-      <div class="divider"></div>
-
-      <div class="row">
-        <button id="newOrderBtn" class="btn btn-primary" type="button" data-i18n="newOrder">Create New Order</button>
-        <button id="advanceStatusBtn" class="btn btn-outline" type="button" data-i18n="advance">Advance Status</button>
-        <button id="resetOrderBtn" class="btn btn-ghost" type="button" data-i18n="reset">Reset Order</button>
-      </div>
-
-      <div class="divider"></div>
-
-      <div class="review-card">
-        <div class="review-top">
-          <strong data-i18n="reward">Any reward earned</strong>
-          <span class="status ok">+10 pts</span>
-        </div>
-        <div class="muted small">Simulated reward display.</div>
-      </div>
-
-      <div class="review-card" style="margin-top:10px;">
-        <div class="review-top">
-          <strong data-i18n="payment">Payment info & amount</strong>
-          <span class="status">S$ 12.50</span>
-        </div>
-        <div class="muted small">Payment is simulated (handled by other team).</div>
-      </div>
-    </section>
-  </main>
-
-  <script src="app.js"></script>
+<script src="app.js"></script>
 </body>
 </html>

@@ -1,72 +1,73 @@
-// Feature two/app.js
 import { db } from "./firebase.js";
-import { collection, getDocs } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  addDoc,
+  serverTimestamp
+} from "firebase/firestore";
 
-// Cart
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
-
-// DOM
-const menuDiv = document.getElementById("menu");
-const totalPriceDiv = document.getElementById("totalPrice");
-
-// This will be filled from Firebase
 let stalls = [];
 
-// ---------- START ----------
+
+const menuDiv = document.getElementById("menu");
+const totalPriceDiv = document.getElementById("totalPrice");
+const cartList = document.getElementById("cartList");
+const cartTotal = document.getElementById("cartTotal");
+const checkoutList = document.getElementById("checkoutList");
+const checkoutTotal = document.getElementById("checkoutTotal");
+const resultText = document.getElementById("resultText");
+
+
 document.addEventListener("DOMContentLoaded", async () => {
-  // If this page has menu, load menu from Firebase
   if (menuDiv) {
     stalls = await loadMenuFromFirestore();
     renderMenuPage();
   }
 
-  // If this page has cart
-  const cartList = document.getElementById("cartList");
   if (cartList) {
     renderCartPage();
   }
 
-  // If this page has payment result
-  const resultText = document.getElementById("resultText");
+  if (checkoutList) {
+    renderCheckoutPage();
+  }
+
   if (resultText) {
     handlePaymentResult(resultText);
   }
 });
 
-// ---------- FIREBASE: LOAD MENU ----------
+
 async function loadMenuFromFirestore() {
-  // 1) Load stall documents
-  const stallsSnap = await getDocs(collection(db, "stalls"));
+  const stallSnap = await getDocs(collection(db, "stalls"));
+  const result = [];
 
-  const loaded = [];
+  for (const docSnap of stallSnap.docs) {
+    const stallData = docSnap.data();
 
-  for (const stallDoc of stallsSnap.docs) {
-    const stallData = stallDoc.data();
-
-    // 2) Load items subcollection for each stall
-    const itemsSnap = await getDocs(collection(db, "stalls", stallDoc.id, "items"));
+    const itemsSnap = await getDocs(
+      collection(db, "stalls", docSnap.id, "items")
+    );
 
     const items = itemsSnap.docs
-      .map((d) => d.data())
-      .sort((a, b) => Number(a.id) - Number(b.id)); // sort by item id
+      .map(d => d.data())
+      .sort((a, b) => a.id - b.id);
 
-    loaded.push({
+    result.push({
       name: stallData.name,
       items
     });
   }
 
-  // sort stalls by name (optional)
-  loaded.sort((a, b) => a.name.localeCompare(b.name));
-
-  return loaded;
+  return result.sort((a, b) => a.name.localeCompare(b.name));
 }
 
-// ---------- MENU PAGE ----------
+
 function renderMenuPage() {
   menuDiv.innerHTML = "";
 
-  stalls.forEach((stall) => {
+  stalls.forEach(stall => {
     const stallDiv = document.createElement("div");
     stallDiv.className = "stall";
 
@@ -74,39 +75,34 @@ function renderMenuPage() {
     h3.textContent = stall.name;
     stallDiv.appendChild(h3);
 
-    stall.items.forEach((item) => {
+    stall.items.forEach(item => {
       const itemDiv = document.createElement("div");
       itemDiv.className = "food";
 
-      const infoDiv = document.createElement("div");
-      infoDiv.innerHTML = `<span>${escapeHtml(item.name)}</span>
-        <span style="margin-left:10px;">$${Number(item.price).toFixed(2)}</span>`;
-      itemDiv.appendChild(infoDiv);
+      itemDiv.innerHTML = `
+        <div>
+          <span>${escapeHtml(item.name)}</span>
+          <span style="margin-left:10px;">$${item.price.toFixed(2)}</span>
+        </div>
+      `;
 
       const btn = document.createElement("button");
       btn.textContent = "Add";
-      btn.addEventListener("click", () => addToCart(stall.name, item.id));
-      itemDiv.appendChild(btn);
+      btn.onclick = () => addToCart(stall.name, item);
 
+      itemDiv.appendChild(btn);
       stallDiv.appendChild(itemDiv);
     });
 
     menuDiv.appendChild(stallDiv);
   });
 
-  updateTotal();
+  updateMenuTotal();
 }
 
-function addToCart(stallName, itemId) {
-  const stall = stalls.find((s) => s.name === stallName);
-  if (!stall) return;
-
-  const item = stall.items.find((i) => String(i.id) === String(itemId));
-  if (!item) return;
-
-  // ✅ Better cart: store quantity instead of duplicates
+function addToCart(stallName, item) {
   const existing = cart.find(
-    (c) => c.stall === stallName && String(c.id) === String(itemId)
+    c => c.id === item.id && c.stall === stallName
   );
 
   if (existing) {
@@ -115,59 +111,41 @@ function addToCart(stallName, itemId) {
     cart.push({
       id: item.id,
       name: item.name,
-      price: Number(item.price),
+      price: item.price,
       stall: stallName,
-      qty: 1
+      qty: 1,
+      selectedAddons: []
     });
   }
 
   saveCart();
-  updateTotal();
+  updateMenuTotal();
 }
 
-function updateTotal() {
+function updateMenuTotal() {
   if (!totalPriceDiv) return;
-  const total = cart.reduce((sum, i) => sum + i.price * (i.qty || 1), 0);
+  const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
   totalPriceDiv.textContent = "Total: $" + total.toFixed(2);
 }
 
-function saveCart() {
-  localStorage.setItem("cart", JSON.stringify(cart));
-}
 
-window.goCart = function goCart() {
-  window.location.href = "cart.html";
-};
-
-// ---------- CART PAGE ----------
 function renderCartPage() {
-  const cartList = document.getElementById("cartList");
-  const cartTotal = document.getElementById("cartTotal");
-  if (!cartList) return;
-
   cartList.innerHTML = "";
-
-  const total = cart.reduce((sum, item) => sum + item.price * (item.qty || 1), 0);
 
   cart.forEach((item, index) => {
     const div = document.createElement("div");
     div.className = "order-item";
 
     div.innerHTML = `
-      <div>
-        ${escapeHtml(item.name)} (${escapeHtml(item.stall)})
-        - $${Number(item.price).toFixed(2)}
-        x ${item.qty || 1}
-      </div>
-      <button data-index="${index}">Remove</button>
+      <div>${item.name} (${item.stall}) - $${item.price.toFixed(2)} x ${item.qty}</div>
+      <button>Remove</button>
     `;
 
-    div.querySelector("button").addEventListener("click", () => removeItem(index));
-
+    div.querySelector("button").onclick = () => removeItem(index);
     cartList.appendChild(div);
   });
 
-  if (cartTotal) cartTotal.textContent = "Total: $" + total.toFixed(2);
+  updateCartTotal();
 }
 
 function removeItem(index) {
@@ -176,41 +154,125 @@ function removeItem(index) {
   renderCartPage();
 }
 
-window.goCheckout = function goCheckout() {
-  window.location.href = "checkout.html";
-};
+function updateCartTotal() {
+  if (!cartTotal) return;
+  const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  cartTotal.textContent = "Total: $" + total.toFixed(2);
+}
 
-// ---------- PAYMENT ----------
-window.makePayment = function makePayment() {
+
+function renderCheckoutPage() {
+  checkoutList.innerHTML = "";
+
+  cart.forEach(item => {
+    const addons = [
+      { name: "Extra Rice", price: 0.5 },
+      { name: "Add Egg", price: 1.0 },
+      { name: "Less Spicy", price: 0 }
+    ];
+
+    const wrap = document.createElement("div");
+    wrap.className = "checkout-item";
+
+    wrap.innerHTML = `
+      <b>${item.name}</b> (${item.stall})<br>
+      $${item.price.toFixed(2)} x ${item.qty}
+      <div style="margin-top:6px;"><b>Add-ons</b></div>
+    `;
+
+    addons.forEach(addon => {
+      const label = document.createElement("label");
+      label.style.display = "block";
+
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = item.selectedAddons.some(a => a.name === addon.name);
+
+      cb.onchange = () => {
+        if (cb.checked) {
+          item.selectedAddons.push(addon);
+        } else {
+          item.selectedAddons =
+            item.selectedAddons.filter(a => a.name !== addon.name);
+        }
+        saveCart();
+        updateCheckoutTotal();
+      };
+
+      label.appendChild(cb);
+      label.append(` ${addon.name} (+$${addon.price.toFixed(2)})`);
+      wrap.appendChild(label);
+    });
+
+    checkoutList.appendChild(wrap);
+  });
+
+  updateCheckoutTotal();
+}
+
+function updateCheckoutTotal() {
+  const total = cart.reduce((sum, item) => {
+    const addonTotal = item.selectedAddons.reduce((s, a) => s + a.price, 0);
+    return sum + (item.price + addonTotal) * item.qty;
+  }, 0);
+
+  checkoutTotal.textContent = "Total: $" + total.toFixed(2);
+}
+
+
+window.makePayment = function () {
   const success = Math.random() > 0.3;
   localStorage.setItem("paymentResult", success ? "success" : "fail");
-  window.location.href = "payment.html";
+  location.href = "payment.html";
 };
 
-function handlePaymentResult(resultText) {
+async function handlePaymentResult(el) {
   const result = localStorage.getItem("paymentResult");
 
   if (result === "success") {
-    resultText.textContent = "Payment Successful!";
+    el.textContent = "Payment Successful! Saving order...";
+
+    if (!localStorage.getItem("memberId")) {
+      localStorage.setItem(
+        "memberId",
+        prompt("Enter your name (for order history)")
+      );
+    }
+
+    await addDoc(collection(db, "orders"), {
+      createdBy: localStorage.getItem("memberId"),
+      items: cart,
+      total: cart.reduce((s, i) => {
+        const addons = i.selectedAddons.reduce((x, a) => x + a.price, 0);
+        return s + (i.price + addons) * i.qty;
+      }, 0),
+      status: "Preparing",
+      createdAt: serverTimestamp()
+    });
+
     cart = [];
     saveCart();
-  } else if (result === "fail") {
-    resultText.textContent = "Payment Failed!";
+    el.textContent = "Payment Successful! Order saved ✅";
+  } else {
+    el.textContent = "Payment Failed!";
   }
 
   localStorage.removeItem("paymentResult");
 }
 
-window.backHome = function backHome() {
-  location.href = "index.html";
-};
 
-// ---------- HELPER ----------
+window.goCart = () => location.href = "cart.html";
+window.goCheckout = () => location.href = "checkout.html";
+window.backHome = () => location.href = "menu.html";
+
+
+function saveCart() {
+  localStorage.setItem("cart", JSON.stringify(cart));
+}
+
 function escapeHtml(text) {
   return String(text)
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+    .replaceAll(">", "&gt;");
 }

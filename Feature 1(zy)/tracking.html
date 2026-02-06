@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Order Tracking</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">🍜</span>
+      <span class="appname" data-i18n="appTitle">Hawker Hub</span>
+    </div>
+    <div class="top-actions">
+      <a class="btn btn-ghost" href="stall.html">← Stall</a>
+      <button id="langToggle" class="btn btn-ghost" type="button">EN / 中文</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <div class="section-title">
+        <h2 data-i18n="tracking">Order Tracking</h2>
+      </div>
+
+      <div class="stall-header">
+        <div>
+          <div class="muted small">order number / ID</div>
+          <div id="orderId" class="big">—</div>
+        </div>
+        <div>
+          <div class="muted small">status</div>
+          <div id="orderStatus" class="big">—</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="muted small">the time line</div>
+      <div class="progress" style="margin-top:10px;">
+        <div class="step" id="step0">Preparing</div>
+        <div class="line"></div>
+        <div class="step" id="step1">Ready</div>
+        <div class="line"></div>
+        <div class="step" id="step2">Completed</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="row">
+        <button id="newOrderBtn" class="btn btn-primary" type="button" data-i18n="newOrder">Create New Order</button>
+        <button id="advanceStatusBtn" class="btn btn-outline" type="button" data-i18n="advance">Advance Status</button>
+        <button id="resetOrderBtn" class="btn btn-ghost" type="button" data-i18n="reset">Reset Order</button>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="review-card">
+        <div class="review-top">
+          <strong data-i18n="reward">Any reward earned</strong>
+          <span class="status ok">+10 pts</span>
+        </div>
+        <div class="muted small">Simulated reward display.</div>
+      </div>
+
+      <div class="review-card" style="margin-top:10px;">
+        <div class="review-top">
+          <strong data-i18n="payment">Payment info & amount</strong>
+          <span class="status">S$ 12.50</span>
+        </div>
+        <div class="muted small">Payment is simulated (handled by other team).</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

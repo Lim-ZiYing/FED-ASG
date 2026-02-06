@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Report Issue</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">🍜</span>
+      <span class="appname" data-i18n="appTitle">Hawker Hub</span>
+    </div>
+    <div class="top-actions">
+      <a class="btn btn-ghost" href="stall.html">← Stall</a>
+      <button id="langToggle" class="btn btn-ghost" type="button">EN / 中文</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <div class="section-title">
+        <h2 data-i18n="reportPage">Report Page</h2>
+        <button id="clearComplaintsBtn" class="btn btn-ghost" type="button">Clear</button>
+      </div>
+
+      <form id="complaintForm" class="form">
+        <div class="form-row">
+          <label for="issueSelect" data-i18n="issueType">Issue Type</label>
+          <select id="issueSelect" required>
+            <option value="">Select issue</option>
+            <option value="Poor Service">Poor Service</option>
+            <option value="Hygiene Issue">Hygiene Issue</option>
+            <option value="Food Quality">Food Quality</option>
+            <option value="Overcharging">Overcharging</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label for="complaintInput" data-i18n="details">Complaint Details</label>
+          <textarea id="complaintInput" required></textarea>
+        </div>
+
+        <div class="footer-actions">

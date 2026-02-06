@@ -1,24 +1,28 @@
-import { db } from "./firebase.js";
-import {
-  collection,
-  getDocs,
-  addDoc,
-  serverTimestamp
-} from "firebase/firestore";
+// Feature two/app.js (CONFIG version)
 
+// --------------------
+// GLOBAL STATE
+// --------------------
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 let stalls = [];
 
-
+// --------------------
+// PAGE ELEMENTS
+// --------------------
 const menuDiv = document.getElementById("menu");
 const totalPriceDiv = document.getElementById("totalPrice");
+
 const cartList = document.getElementById("cartList");
 const cartTotal = document.getElementById("cartTotal");
+
 const checkoutList = document.getElementById("checkoutList");
 const checkoutTotal = document.getElementById("checkoutTotal");
+
 const resultText = document.getElementById("resultText");
 
-
+// --------------------
+// START
+// --------------------
 document.addEventListener("DOMContentLoaded", async () => {
   if (menuDiv) {
     stalls = await loadMenuFromFirestore();
@@ -38,32 +42,34 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-
+// --------------------
+// LOAD MENU FROM FIRESTORE
+// --------------------
 async function loadMenuFromFirestore() {
-  const stallSnap = await getDocs(collection(db, "stalls"));
+  const snap = await db.collection("stalls").get();
   const result = [];
 
-  for (const docSnap of stallSnap.docs) {
-    const stallData = docSnap.data();
-
-    const itemsSnap = await getDocs(
-      collection(db, "stalls", docSnap.id, "items")
-    );
+  for (const doc of snap.docs) {
+    const stall = doc.data();
+    const itemsSnap = await db
+      .collection("stalls")
+      .doc(doc.id)
+      .collection("items")
+      .get();
 
     const items = itemsSnap.docs
       .map(d => d.data())
       .sort((a, b) => a.id - b.id);
 
-    result.push({
-      name: stallData.name,
-      items
-    });
+    result.push({ name: stall.name, items });
   }
 
-  return result.sort((a, b) => a.name.localeCompare(b.name));
+  return result;
 }
 
-
+// --------------------
+// MENU PAGE
+// --------------------
 function renderMenuPage() {
   menuDiv.innerHTML = "";
 
@@ -80,10 +86,8 @@ function renderMenuPage() {
       itemDiv.className = "food";
 
       itemDiv.innerHTML = `
-        <div>
-          <span>${escapeHtml(item.name)}</span>
-          <span style="margin-left:10px;">$${item.price.toFixed(2)}</span>
-        </div>
+        <span>${item.name}</span>
+        <span style="margin-left:10px;">$${item.price.toFixed(2)}</span>
       `;
 
       const btn = document.createElement("button");
@@ -128,20 +132,18 @@ function updateMenuTotal() {
   totalPriceDiv.textContent = "Total: $" + total.toFixed(2);
 }
 
-
+// --------------------
+// CART PAGE
+// --------------------
 function renderCartPage() {
   cartList.innerHTML = "";
 
   cart.forEach((item, index) => {
     const div = document.createElement("div");
-    div.className = "order-item";
-
     div.innerHTML = `
-      <div>${item.name} (${item.stall}) - $${item.price.toFixed(2)} x ${item.qty}</div>
-      <button>Remove</button>
+      ${item.name} (${item.stall}) - $${item.price.toFixed(2)} x ${item.qty}
+      <button onclick="removeItem(${index})">Remove</button>
     `;
-
-    div.querySelector("button").onclick = () => removeItem(index);
     cartList.appendChild(div);
   });
 
@@ -160,50 +162,18 @@ function updateCartTotal() {
   cartTotal.textContent = "Total: $" + total.toFixed(2);
 }
 
-
+// --------------------
+// CHECKOUT + ADD-ONS
+// --------------------
 function renderCheckoutPage() {
   checkoutList.innerHTML = "";
 
   cart.forEach(item => {
-    const addons = [
-      { name: "Extra Rice", price: 0.5 },
-      { name: "Add Egg", price: 1.0 },
-      { name: "Less Spicy", price: 0 }
-    ];
-
     const wrap = document.createElement("div");
-    wrap.className = "checkout-item";
-
     wrap.innerHTML = `
       <b>${item.name}</b> (${item.stall})<br>
       $${item.price.toFixed(2)} x ${item.qty}
-      <div style="margin-top:6px;"><b>Add-ons</b></div>
     `;
-
-    addons.forEach(addon => {
-      const label = document.createElement("label");
-      label.style.display = "block";
-
-      const cb = document.createElement("input");
-      cb.type = "checkbox";
-      cb.checked = item.selectedAddons.some(a => a.name === addon.name);
-
-      cb.onchange = () => {
-        if (cb.checked) {
-          item.selectedAddons.push(addon);
-        } else {
-          item.selectedAddons =
-            item.selectedAddons.filter(a => a.name !== addon.name);
-        }
-        saveCart();
-        updateCheckoutTotal();
-      };
-
-      label.appendChild(cb);
-      label.append(` ${addon.name} (+$${addon.price.toFixed(2)})`);
-      wrap.appendChild(label);
-    });
-
     checkoutList.appendChild(wrap);
   });
 
@@ -211,20 +181,17 @@ function renderCheckoutPage() {
 }
 
 function updateCheckoutTotal() {
-  const total = cart.reduce((sum, item) => {
-    const addonTotal = item.selectedAddons.reduce((s, a) => s + a.price, 0);
-    return sum + (item.price + addonTotal) * item.qty;
-  }, 0);
-
+  const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
   checkoutTotal.textContent = "Total: $" + total.toFixed(2);
 }
 
-
-window.makePayment = function () {
-  const success = Math.random() > 0.3;
-  localStorage.setItem("paymentResult", success ? "success" : "fail");
+// --------------------
+// PAYMENT
+// --------------------
+function makePayment() {
+  localStorage.setItem("paymentResult", "success");
   location.href = "payment.html";
-};
+}
 
 async function handlePaymentResult(el) {
   const result = localStorage.getItem("paymentResult");
@@ -232,27 +199,16 @@ async function handlePaymentResult(el) {
   if (result === "success") {
     el.textContent = "Payment Successful! Saving order...";
 
-    if (!localStorage.getItem("memberId")) {
-      localStorage.setItem(
-        "memberId",
-        prompt("Enter your name (for order history)")
-      );
-    }
-
-    await addDoc(collection(db, "orders"), {
-      createdBy: localStorage.getItem("memberId"),
+    await db.collection("orders").add({
       items: cart,
-      total: cart.reduce((s, i) => {
-        const addons = i.selectedAddons.reduce((x, a) => x + a.price, 0);
-        return s + (i.price + addons) * i.qty;
-      }, 0),
+      total: cart.reduce((s, i) => s + i.price * i.qty, 0),
       status: "Preparing",
-      createdAt: serverTimestamp()
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
 
     cart = [];
     saveCart();
-    el.textContent = "Payment Successful! Order saved ✅";
+    el.textContent = "Order saved ✅";
   } else {
     el.textContent = "Payment Failed!";
   }
@@ -260,19 +216,17 @@ async function handlePaymentResult(el) {
   localStorage.removeItem("paymentResult");
 }
 
-
-window.goCart = () => location.href = "cart.html";
-window.goCheckout = () => location.href = "checkout.html";
-window.backHome = () => location.href = "menu.html";
-
-
+// --------------------
+// HELPERS
+// --------------------
 function saveCart() {
   localStorage.setItem("cart", JSON.stringify(cart));
 }
 
-function escapeHtml(text) {
-  return String(text)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;");
+function goCart() {
+  location.href = "cart.html";
+}
+
+function goCheckout() {
+  location.href = "checkout.html";
 }

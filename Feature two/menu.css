@@ -1,21 +1,41 @@
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f4f4f4;
+.stall{
+  margin-bottom: 26px;
 }
 
-.topbar {
-  padding: 16px 24px;
+.stall-title{
+  margin: 0 0 12px;
   font-size: 20px;
-  font-weight: bold;
-  background: white;
-  border-bottom: 1px solid #ddd;
 }
 
-.container {
-  padding: 24px;
+.food{
+  background:#e6e6e6;
+  border-radius:12px;
+  padding:12px 14px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:14px;
+  margin-bottom:10px;
 }
 
-button {
-  cursor: pointer;
+.food-left{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+.food-name{
+  font-weight:700;
+}
+
+.food-right{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.food-price{
+  font-weight:800;
+  min-width:80px;
+  text-align:right;
 }

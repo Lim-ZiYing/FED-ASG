@@ -1,20 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Checkout</title>
+  <meta charset="UTF-8" />
+  <title>Checkout</title>
 
-    <link rel="stylesheet" href="base.css">
-    <link rel="stylesheet" href="checkout.css">
+  <link rel="stylesheet" href="base.css" />
+  <link rel="stylesheet" href="checkout.css" />
 </head>
 <body>
 
-<header>Checkout</header>
+  <div class="phone">
+    <header class="topbar">Checkout</header>
 
-<div id="checkoutView">
-    <button onclick="makePayment()">Make Payment</button>
-</div>
+    <main class="content">
+      <div id="checkoutList"></div>
 
-<script src="app.js"></script>
+      <div class="section">
+        <h4>Additional options</h4>
+
+        <label class="row">
+          <span>Takeaway package (+$0.30)</span>
+          <input type="checkbox" id="addonTakeaway" />
+        </label>
+
+        <h4 style="margin-top:14px;">Delivery</h4>
+        <label class="row">
+          <span>Priority (+$9.00)</span>
+          <input type="radio" name="delivery" value="9" />
+        </label>
+        <label class="row">
+          <span>Standard (+$6.00)</span>
+          <input type="radio" name="delivery" value="6" />
+        </label>
+        <label class="row">
+          <span>Saver (+$4.00)</span>
+          <input type="radio" name="delivery" value="4" />
+        </label>
+      </div>
+
+      <h3 id="checkoutTotal">Total: $0.00</h3>
+
+      <button class="primary" onclick="makePayment()">Make payment</button>
+      <button class="secondary" onclick="backCart()">Back to Cart</button>
+    </main>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+  <script src="firebase.js"></script>
+  <script src="app.js"></script>
+
 </body>
 </html>

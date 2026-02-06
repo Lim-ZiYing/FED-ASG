@@ -1,173 +1,333 @@
-const stalls = [
-    {
-        name: "Ah Hock Chicken Rice",
-        items: [
-            { id: 1, name: "Roasted Chicken Rice", price: 4.50 },
-            { id: 2, name: "Steamed Chicken Rice", price: 4.00 },
-            { id: 3, name: "Char Siew Rice", price: 4.80 }
-        ]
-    },
-    {
-        name: "Mdm Tan Noodles",
-        items: [
-            { id: 4, name: "Laksa", price: 5.50 },
-            { id: 5, name: "Wanton Mee", price: 5.00 },
-            { id: 6, name: "Char Kway Teow", price: 5.50 }
-        ]
-    },
-    {
-        name: "Western Stall",
-        items: [
-            { id: 7, name: "Chicken Chop", price: 7.50 },
-            { id: 8, name: "Fish & Chips", price: 8.00 },
-            { id: 9, name: "Beef Burger", price: 6.80 }
-        ]
-    },
-    {
-        name: "Drinks Stall",
-        items: [
-            { id: 10, name: "Bubble Tea", price: 3.00 },
-            { id: 11, name: "Iced Lemon Tea", price: 2.50 },
-            { id: 12, name: "Canned Coke", price: 1.80 }
-        ]
-    }
-];
+// app.js (CONFIG/COMPAT)
 
-
-
+// ----------------------
+// CART STORAGE
+// ----------------------
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
+function saveCart() {
+  localStorage.setItem("cart", JSON.stringify(cart));
+}
 
+function safeNumber(v) {
+  const n = Number(v);
+  return Number.isNaN(n) ? 0 : n;
+}
+
+// ----------------------
+// PAGE ELEMENTS
+// ----------------------
 const menuDiv = document.getElementById("menu");
 const totalPriceDiv = document.getElementById("totalPrice");
-
-if (menuDiv) {
-    renderMenuPage();
-}
-
-function renderMenuPage() {
-    menuDiv.innerHTML = "";
-    stalls.forEach(stall => {
-        const stallDiv = document.createElement("div");
-        stallDiv.className = "stall";
-
-     
-        const h3 = document.createElement("h3");
-        h3.textContent = stall.name;
-        stallDiv.appendChild(h3);
-
-
-        stall.items.forEach(item => {
-            const itemDiv = document.createElement("div");
-            itemDiv.className = "food";
-
-
-            const infoDiv = document.createElement("div");
-            infoDiv.innerHTML = `<span>${item.name}</span> <span style="margin-left: 10px;">$${item.price.toFixed(2)}</span>`;
-            itemDiv.appendChild(infoDiv);
-
-
-            const btn = document.createElement("button");
-            btn.textContent = "Add";
-            btn.addEventListener("click", () => addToCart(stall.name, item.id));
-            itemDiv.appendChild(btn);
-
-            stallDiv.appendChild(itemDiv);
-        });
-
-        menuDiv.appendChild(stallDiv);
-    });
-
-    updateTotal();
-}
-
-function addToCart(stallName, itemId) {
-    const stall = stalls.find(s => s.name === stallName);
-    const item = stall.items.find(i => i.id === itemId);
-    cart.push({ ...item, stall: stallName });
-
-    saveCart();
-    updateTotal();
-}
-
-function updateTotal() {
-    if (!totalPriceDiv) return;
-    const total = cart.reduce((sum, i) => sum + i.price, 0);
-    totalPriceDiv.textContent = "Total: $" + total.toFixed(2);
-}
-
-function saveCart() {
-    localStorage.setItem("cart", JSON.stringify(cart));
-}
-
-function goCart() {
-    window.location.href = "cart.html";
-}
-
 
 const cartList = document.getElementById("cartList");
 const cartTotal = document.getElementById("cartTotal");
 
-if (cartList) {
+const checkoutList = document.getElementById("checkoutList");
+const checkoutTotal = document.getElementById("checkoutTotal");
+
+const resultText = document.getElementById("resultText");
+
+// Checkout options
+const addonTakeaway = document.getElementById("addonTakeaway");
+
+// ----------------------
+// START
+// ----------------------
+document.addEventListener("DOMContentLoaded", async () => {
+  // Menu page
+  if (menuDiv) {
+    const stalls = await loadMenuFromFirestore();
+    renderMenuPage(stalls);
+    updateMenuTotal();
+  }
+
+  // Cart page
+  if (cartList) {
     renderCartPage();
+  }
+
+  // Checkout page
+  if (checkoutList) {
+    renderCheckoutPage();
+    wireCheckoutOptions();
+  }
+
+  // Payment page
+  if (resultText) {
+    await handlePaymentResult();
+  }
+});
+
+// ----------------------
+// FIRESTORE: Load menu
+// stalls collection -> each stall doc has field: name
+// each stall doc has subcollection: items (id, name, price)
+// ----------------------
+async function loadMenuFromFirestore() {
+  const snap = await db.collection("stalls").get();
+  const stalls = [];
+
+  for (const doc of snap.docs) {
+    const stallData = doc.data();
+
+    const itemsSnap = await db
+      .collection("stalls")
+      .doc(doc.id)
+      .collection("items")
+      .get();
+
+    const items = itemsSnap.docs
+      .map(d => {
+        const x = d.data();
+        return {
+          id: safeNumber(x.id),
+          name: x.name || "",
+          price: safeNumber(x.price)
+        };
+      })
+      .sort((a, b) => a.id - b.id);
+
+    stalls.push({
+      name: stallData.name || "",
+      items
+    });
+  }
+
+  stalls.sort((a, b) => a.name.localeCompare(b.name));
+  return stalls;
 }
 
-function renderCartPage() {
-    cartList.innerHTML = "";
-    const total = cart.reduce((sum, item) => sum + item.price, 0);
+// ----------------------
+// MENU RENDER
+// ----------------------
+function renderMenuPage(stalls) {
+  menuDiv.innerHTML = "";
 
-    cart.forEach((item, index) => {
-        const div = document.createElement("div");
-        div.className = "order-item";
+  stalls.forEach(stall => {
+    const stallDiv = document.createElement("div");
+    stallDiv.className = "stall";
 
-        div.innerHTML = `
-            <div>${item.name} (${item.stall}) - $${item.price.toFixed(2)}</div>
-            <button onclick="removeItem(${index})">Remove</button>
-        `;
-        cartList.appendChild(div);
+    const h3 = document.createElement("h3");
+    h3.textContent = stall.name;
+    stallDiv.appendChild(h3);
+
+    stall.items.forEach(item => {
+      const row = document.createElement("div");
+      row.className = "food-row";
+
+      const left = document.createElement("div");
+      left.className = "food-left";
+      left.innerHTML = `<div class="food-name">${escapeHtml(item.name)}</div>`;
+
+      const mid = document.createElement("div");
+      mid.className = "food-price";
+      mid.textContent = `$${safeNumber(item.price).toFixed(2)}`;
+
+      const right = document.createElement("div");
+      const btn = document.createElement("button");
+      btn.className = "pill";
+      btn.textContent = "Add";
+      btn.addEventListener("click", () => addToCart(stall.name, item));
+      right.appendChild(btn);
+
+      row.appendChild(left);
+      row.appendChild(mid);
+      row.appendChild(right);
+
+      stallDiv.appendChild(row);
     });
 
-    if (cartTotal) {
-        cartTotal.textContent = "Total: $" + total.toFixed(2);
-    }
+    menuDiv.appendChild(stallDiv);
+  });
+}
+
+function addToCart(stallName, item) {
+  const found = cart.find(x => x.stall === stallName && x.id === item.id);
+
+  if (found) {
+    found.qty = safeNumber(found.qty) + 1;
+  } else {
+    cart.push({
+      id: item.id,
+      name: item.name,
+      price: safeNumber(item.price),
+      stall: stallName,
+      qty: 1
+    });
+  }
+
+  saveCart();
+  updateMenuTotal();
+}
+
+function updateMenuTotal() {
+  if (!totalPriceDiv) return;
+
+  const total = cart.reduce((sum, i) => {
+    return sum + safeNumber(i.price) * safeNumber(i.qty);
+  }, 0);
+
+  totalPriceDiv.textContent = "Total: $" + total.toFixed(2);
+}
+
+// ----------------------
+// CART PAGE
+// ----------------------
+function renderCartPage() {
+  cartList.innerHTML = "";
+
+  if (cart.length === 0) {
+    cartList.innerHTML = `<p>Your cart is empty.</p>`;
+    if (cartTotal) cartTotal.textContent = "Total: $0.00";
+    return;
+  }
+
+  cart.forEach((item, index) => {
+    const div = document.createElement("div");
+    div.className = "cart-item";
+
+    div.innerHTML = `
+      <div class="cart-title">${escapeHtml(item.name)} <small>(${escapeHtml(item.stall)})</small></div>
+      <div class="cart-row">
+        <span>$${safeNumber(item.price).toFixed(2)} x ${safeNumber(item.qty)}</span>
+        <button class="mini" data-index="${index}">Remove</button>
+      </div>
+    `;
+
+    div.querySelector("button").addEventListener("click", () => removeItem(index));
+    cartList.appendChild(div);
+  });
+
+  const total = cart.reduce((s, i) => s + safeNumber(i.price) * safeNumber(i.qty), 0);
+  cartTotal.textContent = "Total: $" + total.toFixed(2);
 }
 
 function removeItem(index) {
-    cart.splice(index, 1);
-    saveCart();
-    renderCartPage();
+  cart.splice(index, 1);
+  saveCart();
+  renderCartPage();
 }
 
+// ----------------------
+// CHECKOUT PAGE (options)
+// ----------------------
+function renderCheckoutPage() {
+  checkoutList.innerHTML = "";
+
+  if (cart.length === 0) {
+    checkoutList.innerHTML = "<p>No items to checkout.</p>";
+    checkoutTotal.textContent = "Total: $0.00";
+    return;
+  }
+
+  cart.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "checkout-item";
+    div.innerHTML = `
+      <div><b>${escapeHtml(item.name)}</b> <small>(${escapeHtml(item.stall)})</small></div>
+      <div>$${safeNumber(item.price).toFixed(2)} x ${safeNumber(item.qty)}</div>
+    `;
+    checkoutList.appendChild(div);
+  });
+
+  updateCheckoutTotal();
+}
+
+function wireCheckoutOptions() {
+  if (addonTakeaway) {
+    addonTakeaway.addEventListener("change", updateCheckoutTotal);
+  }
+
+  const deliveryRadios = document.querySelectorAll('input[name="delivery"]');
+  deliveryRadios.forEach(r => r.addEventListener("change", updateCheckoutTotal));
+}
+
+function updateCheckoutTotal() {
+  if (!checkoutTotal) return;
+
+  const base = cart.reduce((s, i) => s + safeNumber(i.price) * safeNumber(i.qty), 0);
+
+  const takeawayFee = addonTakeaway && addonTakeaway.checked ? 0.30 : 0;
+
+  const deliverySelected = document.querySelector('input[name="delivery"]:checked');
+  const deliveryFee = deliverySelected ? safeNumber(deliverySelected.value) : 0;
+
+  const total = base + takeawayFee + deliveryFee;
+
+  checkoutTotal.textContent = "Total: $" + total.toFixed(2);
+}
+
+// ----------------------
+// PAYMENT (demo) + save order to Firestore
+// ----------------------
+function randomSuccess() {
+  return Math.random() > 0.3;
+}
+
+async function handlePaymentResult() {
+  const ok = randomSuccess();
+
+  if (!ok) {
+    resultText.textContent = "Payment Failed!";
+    return;
+  }
+
+  resultText.textContent = "Payment Successful! Saving order...";
+
+  // calculate checkout total again
+  const base = cart.reduce((s, i) => s + safeNumber(i.price) * safeNumber(i.qty), 0);
+  const takeawayFee = addonTakeaway && addonTakeaway.checked ? 0.30 : 0;
+  const deliverySelected = document.querySelector('input[name="delivery"]:checked');
+  const deliveryFee = deliverySelected ? safeNumber(deliverySelected.value) : 0;
+  const total = base + takeawayFee + deliveryFee;
+
+  // Save order
+  await db.collection("orders").add({
+    items: cart,
+    fees: {
+      takeaway: takeawayFee,
+      delivery: deliveryFee
+    },
+    total: total,
+    status: "Preparing",
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  // clear cart
+  cart = [];
+  saveCart();
+
+  resultText.textContent = "Order saved ✅";
+}
+
+// ----------------------
+// NAVIGATION (called from HTML onclick)
+// ----------------------
+function goCart() {
+  location.href = "cart.html";
+}
 function goCheckout() {
-    window.location.href = "checkout.html";
+  location.href = "checkout.html";
 }
-
-
 function makePayment() {
-    const success = Math.random() > 0.3;
-    if (success) {
-        localStorage.setItem("paymentResult", "success");
-    } else {
-        localStorage.setItem("paymentResult", "fail");
-    }
-    window.location.href = "payment.html";
+  location.href = "payment.html";
+}
+function backMenu() {
+  location.href = "menu.html";
+}
+function backCart() {
+  location.href = "cart.html";
 }
 
-
-const resultText = document.getElementById("resultText");
-const result = localStorage.getItem("paymentResult");
-
-if (resultText) {
-    if (result === "success") {
-        resultText.textContent = "Payment Successful!";
-        cart = [];
-        saveCart();
-    } else if (result === "fail") {
-        resultText.textContent = "Payment Failed!";
-    }
-    localStorage.removeItem("paymentResult"); 
-}
-
-function backHome() {
-    location.href = "index.html";
+// ----------------------
+// HELPERS
+// ----------------------
+function escapeHtml(text) {
+  return String(text)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }

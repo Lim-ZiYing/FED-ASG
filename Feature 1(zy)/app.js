@@ -90,7 +90,31 @@ const I18N = {
     advance:"Advance Status",
     reset:"Reset Order",
     payment:"Payment info & amount",
-    reward:"Any reward earned"
+    reward:"Any reward earned",
+
+    // report page enhancements
+    backStall: "Stall",
+    reportPageTitle: "Report Page",
+    reportPageSubtitle: "Submit a complaint linked to the selected stall.",
+    clearBtn: "Clear",
+    selectIssue: "Select issue",
+    priority: "Priority",
+    priorityLow: "Low",
+    priorityMed: "Medium",
+    priorityHigh: "High",
+    contactOptional: "Contact (Optional)",
+    contactPH: "e.g. email / phone",
+    detailsPH: "Describe your issue...",
+    totalReports: "Total Reports",
+    openReports: "Open",
+    resolvedReports: "Resolved",
+    myReportHistory: "My Report History",
+    historySubtitle: "View your past reports for this stall.",
+    filterAll: "Filter: All",
+    filterSubmitted: "Submitted",
+    filterResolved: "Resolved",
+    markResolved: "Mark Latest as Resolved",
+    historyNote: "(For demo) This button marks your most recent complaint as “Resolved”."
   },
   zh: {
     appTitle:"小贩中心",
@@ -125,7 +149,31 @@ const I18N = {
     advance:"推进状态",
     reset:"重置订单",
     payment:"付款信息和金额",
-    reward:"获得的奖励"
+    reward:"获得的奖励",
+
+    // report page enhancements
+    backStall: "摊位",
+    reportPageTitle: "投诉页面",
+    reportPageSubtitle: "提交与当前摊位关联的投诉。",
+    clearBtn: "清空",
+    selectIssue: "选择问题",
+    priority: "优先级",
+    priorityLow: "低",
+    priorityMed: "中",
+    priorityHigh: "高",
+    contactOptional: "联系方式（可选）",
+    contactPH: "例如：邮箱/电话",
+    detailsPH: "请描述问题…",
+    totalReports: "投诉总数",
+    openReports: "未解决",
+    resolvedReports: "已解决",
+    myReportHistory: "我的投诉记录",
+    historySubtitle: "查看该摊位的历史投诉。",
+    filterAll: "筛选：全部",
+    filterSubmitted: "已提交",
+    filterResolved: "已解决",
+    markResolved: "将最新投诉设为已解决",
+    historyNote: "（演示用）此按钮会把最新一条投诉设为“已解决”。"
   }
 };
 
@@ -161,7 +209,7 @@ let currentStallId = localStorage.getItem("currentStallId") || STALLS[0].id;
 let likesByStall = load("likesByStall", {});
 // reviews: [{stallId, rating, comment, date, ts}]
 let reviews = load("reviews", []);
-// complaints: [{stallId, issue, details, status, date, ts}]
+// complaints: [{stallId, issue, details, priority, contact, status, date, ts}]
 let complaints = load("complaints", []);
 // loyalty (global)
 let loyalty = load("loyalty", { points: 0 });
@@ -521,32 +569,64 @@ function initLoyalty(){
    Complaints
 ============================= */
 function renderComplaints(){
-  const list = qs("complaintsList");
-  if (!list) return;
+  const listEl = qs("complaintsList");
+  if (!listEl) return;
 
-  const cs = complaints.filter(c=>c.stallId===currentStallId).slice().reverse();
-  list.innerHTML = "";
+  const filterValue = qs("filterStatus")?.value || "all";
 
-  if (cs.length===0){
-    list.innerHTML = `<div class="muted small">No complaints submitted.</div>`;
+  // complaints for selected stall (latest first)
+  let list = complaints
+    .filter(c => c.stallId === currentStallId)
+    .slice()
+    .sort((a, b) => (b.ts || 0) - (a.ts || 0));
+
+  // Stats (only exists on report page)
+  const totalEl = qs("totalReports");
+  const openEl = qs("openReports");
+  const resolvedEl = qs("resolvedReports");
+
+  if (totalEl && openEl && resolvedEl) {
+    const total = list.length;
+    const open = list.filter(x => x.status !== "Resolved").length;
+    const resolved = list.filter(x => x.status === "Resolved").length;
+
+    totalEl.textContent = String(total);
+    openEl.textContent = String(open);
+    resolvedEl.textContent = String(resolved);
+  }
+
+  // Filter dropdown
+  if (filterValue !== "all") {
+    list = list.filter(x => x.status === filterValue);
+  }
+
+  // Render history list
+  listEl.innerHTML = "";
+
+  if (list.length === 0) {
+    listEl.innerHTML = `<div class="muted small">No reports found.</div>`;
     return;
   }
 
-  cs.forEach(c=>{
+  list.forEach(c => {
     const div = document.createElement("div");
     div.className = "review-card";
+
     const cls = c.status === "Resolved" ? "ok" : "warn";
+
     div.innerHTML = `
       <div class="review-top">
         <div>
           <strong>${escapeHtml(c.issue)}</strong>
           <span class="status ${cls}">${escapeHtml(c.status)}</span>
+          <span class="tag">Priority: ${escapeHtml(c.priority || "Low")}</span>
         </div>
         <div class="muted small">${escapeHtml(c.date)}</div>
       </div>
       <div class="review-text">${escapeHtml(c.details)}</div>
+      ${c.contact ? `<div class="muted small">Contact: ${escapeHtml(c.contact)}</div>` : ""}
     `;
-    list.appendChild(div);
+    listEl.appendChild(div);
   });
 }
 
@@ -557,11 +637,19 @@ function initComplaintForm(){
   const issue = qs("issueSelect");
   const details = qs("complaintInput");
 
-  form.addEventListener("submit",(e)=>{
+  // optional fields (improved report page)
+  const prioritySelect = qs("prioritySelect");
+  const contactInput = qs("contactInput");
+
+  form.addEventListener("submit", (e) => {
     e.preventDefault();
 
     const i = issue.value;
     const d = details.value.trim();
+
+    const priority = prioritySelect ? prioritySelect.value : "Low";
+    const contact = contactInput ? contactInput.value.trim() : "";
+
     if (!i) { alert("Please select issue type."); return; }
     if (!d) { alert("Please enter complaint details."); return; }
 
@@ -569,23 +657,65 @@ function initComplaintForm(){
       stallId: currentStallId,
       issue: i,
       details: d,
+      priority,
+      contact,
       status: "Submitted",
       date: nowText(),
       ts: Date.now()
     });
+
     save("complaints", complaints);
 
+    // reset form inputs
     issue.value = "";
     details.value = "";
+    if (prioritySelect) prioritySelect.value = "Low";
+    if (contactInput) contactInput.value = "";
+
     renderComplaints();
   });
 
+  // Clear complaints for this stall
   const clearBtn = qs("clearComplaintsBtn");
-  if (clearBtn){
-    clearBtn.addEventListener("click", ()=>{
-      complaints = complaints.filter(c=>c.stallId!==currentStallId);
+  if (clearBtn) {
+    clearBtn.addEventListener("click", () => {
+      complaints = complaints.filter(c => c.stallId !== currentStallId);
       save("complaints", complaints);
       renderComplaints();
+    });
+  }
+
+  // Filter dropdown
+  const filter = qs("filterStatus");
+  if (filter) {
+    filter.addEventListener("change", renderComplaints);
+  }
+
+  // Mark Latest as Resolved
+  const markBtn = qs("markResolvedBtn");
+  if (markBtn) {
+    markBtn.addEventListener("click", () => {
+      const list = complaints
+        .filter(c => c.stallId === currentStallId)
+        .slice()
+        .sort((a, b) => (b.ts || 0) - (a.ts || 0));
+
+      if (list.length === 0) {
+        alert("No complaints to update.");
+        return;
+      }
+
+      const latest = list[0];
+
+      const idx = complaints.findIndex(
+        c => c.stallId === latest.stallId && c.ts === latest.ts
+      );
+
+      if (idx !== -1) {
+        complaints[idx].status = "Resolved";
+        save("complaints", complaints);
+        renderComplaints();
+      }
     });
   }
 }

@@ -13,34 +13,105 @@
       <span class="appname" data-i18n="appTitle">Hawker Hub</span>
     </div>
     <div class="top-actions">
-      <a class="btn btn-ghost" href="stall.html">← Stall</a>
+      <a class="btn btn-ghost" href="stall.html">← <span data-i18n="backStall">Stall</span></a>
       <button id="langToggle" class="btn btn-ghost" type="button">EN / 中文</button>
     </div>
   </header>
 
   <main class="container">
-    <section class="card">
-      <div class="section-title">
-        <h2 data-i18n="reportPage">Report Page</h2>
-        <button id="clearComplaintsBtn" class="btn btn-ghost" type="button">Clear</button>
-      </div>
+    <div class="grid-2">
+      <!-- LEFT: SUBMIT REPORT -->
+      <section class="card">
+        <div class="section-title">
+          <div>
+            <h2 style="margin:0;" data-i18n="reportPageTitle">Report Page</h2>
+            <div class="muted small" data-i18n="reportPageSubtitle">
+              Submit a complaint linked to the selected stall.
+            </div>
+          </div>
+          <button id="clearComplaintsBtn" class="btn btn-ghost" type="button" data-i18n="clearBtn">Clear</button>
+        </div>
 
-      <form id="complaintForm" class="form">
-        <div class="form-row">
-          <label for="issueSelect" data-i18n="issueType">Issue Type</label>
-          <select id="issueSelect" required>
-            <option value="">Select issue</option>
-            <option value="Poor Service">Poor Service</option>
-            <option value="Hygiene Issue">Hygiene Issue</option>
-            <option value="Food Quality">Food Quality</option>
-            <option value="Overcharging">Overcharging</option>
-            <option value="Other">Other</option>
+        <form id="complaintForm" class="form">
+          <div class="form-row">
+            <label for="issueSelect" data-i18n="issueType">Issue Type</label>
+            <select id="issueSelect" required>
+              <option value="" data-i18n="selectIssue">Select issue</option>
+              <option value="Poor Service">Poor Service</option>
+              <option value="Hygiene Issue">Hygiene Issue</option>
+              <option value="Food Quality">Food Quality</option>
+              <option value="Overcharging">Overcharging</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label for="prioritySelect" data-i18n="priority">Priority</label>
+            <select id="prioritySelect" required>
+              <option value="Low" data-i18n="priorityLow">Low</option>
+              <option value="Medium" data-i18n="priorityMed">Medium</option>
+              <option value="High" data-i18n="priorityHigh">High</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label for="contactInput" data-i18n="contactOptional">Contact (Optional)</label>
+            <input id="contactInput" type="text" data-i18n-ph="contactPH" placeholder="e.g. email / phone"/>
+          </div>
+
+          <div class="form-row">
+            <label for="complaintInput" data-i18n="details">Complaint Details</label>
+            <textarea id="complaintInput" required data-i18n-ph="detailsPH" placeholder="Describe your issue..."></textarea>
+          </div>
+
+          <div class="footer-actions">
+            <button class="btn btn-primary" type="submit" data-i18n="submitComplaint">Submit Complaint</button>
+          </div>
+        </form>
+
+        <div class="divider"></div>
+
+        <div class="row">
+          <span class="pill"><span data-i18n="totalReports">Total Reports</span>: <strong id="totalReports">0</strong></span>
+          <span class="pill"><span data-i18n="openReports">Open</span>: <strong id="openReports">0</strong></span>
+          <span class="pill"><span data-i18n="resolvedReports">Resolved</span>: <strong id="resolvedReports">0</strong></span>
+        </div>
+      </section>
+
+      <!-- RIGHT: HISTORY -->
+      <section class="card">
+        <div class="section-title">
+          <div>
+            <h2 style="margin:0;" data-i18n="myReportHistory">My Report History</h2>
+            <div class="muted small" data-i18n="historySubtitle">
+              View your past reports for this stall.
+            </div>
+          </div>
+
+          <select id="filterStatus" style="max-width:220px;">
+            <option value="all" data-i18n="filterAll">Filter: All</option>
+            <option value="Submitted" data-i18n="filterSubmitted">Submitted</option>
+            <option value="Resolved" data-i18n="filterResolved">Resolved</option>
           </select>
         </div>
 
-        <div class="form-row">
-          <label for="complaintInput" data-i18n="details">Complaint Details</label>
-          <textarea id="complaintInput" required></textarea>
+        <div id="complaintsList" class="list"></div>
+
+        <div class="divider"></div>
+
+        <div class="row" style="justify-content:flex-end;">
+          <button id="markResolvedBtn" class="btn btn-outline" type="button" data-i18n="markResolved">
+            Mark Latest as Resolved
+          </button>
         </div>
 
-        <div class="footer-actions">
+        <p class="muted small" data-i18n="historyNote">
+          (For demo) This button marks your most recent complaint as “Resolved”.
+        </p>
+      </section>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

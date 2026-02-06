@@ -262,9 +262,7 @@ async function handlePaymentPage() {
   resultText.textContent = "Payment Successful ✅ Order saved!";
 }
 
-// ============================
-// ORDER HISTORY PAGE
-// ============================
+
 async function renderOrderHistory() {
   orderHistoryDiv.innerHTML = "<p>Loading...</p>";
 
@@ -295,16 +293,10 @@ async function renderOrderHistory() {
   });
 }
 
-// ============================
-// Navigation (used by onclick)
-// ============================
 function goCart() { location.href = "cart.html"; }
 function goCheckout() { location.href = "checkout.html"; }
 function makePayment() { location.href = "payment.html"; }
 
-// ============================
-// Boot per page
-// ============================
 document.addEventListener("DOMContentLoaded", async () => {
   if (menuDiv) {
     const stalls = await loadMenuFromFirestore();

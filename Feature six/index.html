@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Account Management</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+    <h1>Hawker Centre Account System</h1>
+</header>
+
+<main>
+
+<section id="registerSection">
+    <h2>Register</h2>
+    <form id="registerForm">
+        <label>Name:</label>
+        <input type="text" id="regName" required>
+
+        <label>Email:</label>
+        <input type="email" id="regEmail" required>
+
+        <label>Password:</label>
+        <input type="password" id="regPassword" required>
+
+        <label>Role:</label>
+        <select id="regRole" required>
+            <option value="patron">Patron</option>
+            <option value="vendor">Vendor</option>
+        </select>
+
+        <button type="submit">Register</button>
+    </form>
+</section>
+
+<section id="loginSection">
+    <h2>Login</h2>
+    <form id="loginForm">
+        <label>Email:</label>
+        <input type="email" id="loginEmail" required>
+
+        <label>Password:</label>
+        <input type="password" id="loginPassword" required>
+
+        <button type="submit">Login</button>
+    </form>
+</section>
+
+<section id="profileSection" style="display:none;">
+    <h2>User Profile</h2>
+    <p id="profileInfo"></p>
+    <button onclick="logout()">Logout</button>
+</section>
+
+</main>
+
+<script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vendor Management</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+    <h1>Vendor Dashboard</h1>
+</header>
+
+<main>
+
+<section>
+    <h2>Add Menu Item</h2>
+    <form id="menuForm">
+        <label>Item Name:</label>
+        <input type="text" id="itemName" required>
+
+        <label>Price:</label>
+        <input type="number" id="itemPrice" step="0.01" required>
+
+        <label>Cuisines (comma separated):</label>
+        <input type="text" id="itemCuisine">
+
+        <button type="submit">Add Item</button>
+    </form>
+</section>
+
+<section>
+    <h2>Menu Items</h2>
+    <ul id="menuList"></ul>
+</section>
+
+</main>
+
+<script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,134 @@
+/* ===== Global ===== */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: #e8efe8;
+  color: #333;
+}
+
+/* ===== Header ===== */
+header {
+  background-color: #2a9d8f;
+  color: white;
+  padding: 16px 24px;
+  margin-bottom: 20px;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+/* ===== Main content ===== */
+main {
+  max-width: 900px;
+  margin: auto;
+  padding: 0 20px 40px;
+}
+
+/* ===== Sections / cards ===== */
+section {
+  background: white;
+  padding: 16px;
+  margin-bottom: 20px;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+/* ===== Form ===== */
+label {
+  font-weight: bold;
+  display: block;
+  margin-top: 10px;
+}
+
+input,
+select,
+textarea,
+button {
+  width: 100%;
+  padding: 8px;
+  margin-top: 6px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+textarea {
+  resize: vertical;
+}
+
+/* ===== Score grid ===== */
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* ===== Buttons ===== */
+button {
+  background-color: #2a9d8f;
+  color: white;
+  border: none;
+  cursor: pointer;
+  margin-top: 14px;
+}
+
+button:hover {
+  background-color: #23867a;
+}
+
+/* ===== Summary text ===== */
+.summary,
+p {
+  margin-top: 10px;
+}
+
+#error {
+  color: #c0392b;
+  font-weight: bold;
+}
+
+/* ===== Table ===== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th {
+  background-color: #2a9d8f;
+  color: white;
+  padding: 10px;
+  text-align: left;
+}
+
+td {
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
+}
+
+tr:nth-child(even) {
+  background-color: #f4f8f4;
+}
+
+/* ===== Grade colours ===== */
+.grade-A { color: #2ecc71; font-weight: bold; }
+.grade-B { color: #27ae60; font-weight: bold; }
+.grade-C { color: #f39c12; font-weight: bold; }
+.grade-D { color: #e74c3c; font-weight: bold; }
+
+/* ===== Responsive ===== */
+@media (max-width: 600px) {
+  .row {
+    grid-template-columns: 1fr;
+  }
+
+  header h1 {
+    font-size: 20px;
+  }
+}

@@ -3,19 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>NEA Inspection</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    input, select, textarea, button { width: 100%; padding: 8px; margin: 6px 0 12px; }
-    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    .small { color: #555; font-size: 14px; }
-    .error { color: red; }
-  </style>
-</head>
-<body>
+  <header>
   <h1>Regulatory & Compliance (NEA)</h1>
+  </header>
+  <link rel="stylesheet" href="inspection.css">
+</head>
+<main>
   <p class="small">Log inspection score + remarks and store in localStorage.</p>
 
   <h2>Log Inspection</h2>
@@ -83,7 +76,7 @@
     <tbody id="historyBody"></tbody>
   </table>
 
-  <script src="HawkerStalls.js"></script>
-  <script src="InspectScript.js"></script> 
-</body>
+  <script type="module" src="./firebase.js"></script>
+  <script type="module" src="./inspections.js"></script>
+</main>
 </html>

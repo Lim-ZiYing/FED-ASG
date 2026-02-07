@@ -1,4 +1,4 @@
-import { db } from "../firebase.js";
+import { db } from "./firebase.js";
 import {
   collection,
   getDocs,
@@ -15,37 +15,50 @@ loadHistory();
 async function loadHistory() {
   historyBody.innerHTML = "";
 
-  const q = query(collection(db, "inspections"), orderBy("date", "desc"));
-  const snap = await getDocs(q);
+  try {
+    const q = query(collection(db, "inspections"), orderBy("date", "desc"));
+    const snap = await getDocs(q);
 
-  let records = [];
-  snap.forEach(d => records.push({ id: d.id, ...d.data() }));
+    if (snap.empty) {
+      historyBody.innerHTML = `<tr><td colspan="6">No records found.</td></tr>`;
+      return;
+    }
 
-  const filter = gradeFilter.value;
-  if (filter) records = records.filter(r => r.grade === filter);
+    let records = [];
+    snap.forEach(d => records.push({ id: d.id, ...d.data() }));
 
-  if (records.length === 0) {
-    historyBody.innerHTML = `<tr><td colspan="6">No records found.</td></tr>`;
-    return;
-  }
+    const filter = gradeFilter.value;
+    if (filter) {
+      records = records.filter(r => r.grade === filter);
+    }
 
-  records.forEach(r => {
-    const dateText = r.date?.toDate ? r.date.toDate().toLocaleString() : "";
+    records.forEach(r => {
+      // ✅ SAFE date handling
+      let dateText = "-";
+      if (r.date && typeof r.date.toDate === "function") {
+        dateText = r.date.toDate().toLocaleString();
+      }
 
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${dateText}</td>
-      <td>${r.stallId} - ${r.stallName}</td>
-      <td>${r.officer}</td>
-      <td>${r.total}</td>
-      <td>${r.grade}</td>
-      <td><button data-id="${r.id}">View</button></td>
-    `;
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${dateText}</td>
+        <td>${r.stallId} - ${r.stallName}</td>
+        <td>${r.officer}</td>
+        <td>${r.total}</td>
+        <td>${r.grade}</td>
+        <td>
+          <button onclick="location.href='dashboard.html?id=${r.id}'">
+            View
+          </button>
+        </td>
+      `;
 
-    tr.querySelector("button").addEventListener("click", () => {
-      location.href = `dashboard.html?id=${r.id}`;
+      historyBody.appendChild(tr);
     });
 
-    historyBody.appendChild(tr);
-  });
+  } catch (err) {
+    console.error("History load error:", err);
+    historyBody.innerHTML =
+      `<tr><td colspan="6">Error loading history.</td></tr>`;
+  }
 }

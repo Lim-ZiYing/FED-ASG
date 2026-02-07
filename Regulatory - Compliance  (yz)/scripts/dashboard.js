@@ -1,4 +1,4 @@
-import { db } from "../firebase.js";
+import { db } from "./firebase.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const params = new URLSearchParams(location.search);

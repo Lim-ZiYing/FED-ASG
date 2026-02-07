@@ -1,3 +1,5 @@
+// inspections.js
+
 import { db } from "./firebase.js";
 import {
   collection,
@@ -24,9 +26,12 @@ document.addEventListener("DOMContentLoaded", () => {
   loadStalls();
   updatePreview();
 
-  [clean, handle, pest, storage].forEach(inp => inp.addEventListener("input", updatePreview));
+  [clean, handle, pest, storage].forEach(inp =>
+    inp.addEventListener("input", updatePreview)
+  );
   saveBtn.addEventListener("click", saveInspection);
 
+  // ===== Load stalls from Firebase =====
   async function loadStalls() {
     stallSelect.innerHTML = "";
 
@@ -36,9 +41,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       snap.forEach(docSnap => {
         const s = docSnap.data();
+
         const opt = document.createElement("option");
         opt.value = s.stallId;
-        opt.textContent = `${s.stallId} - ${s.stallName}`;
+        opt.textContent = `${s.stallId} - ${s.name}`; // ✅ FIXED
+
         stallSelect.appendChild(opt);
       });
 
@@ -49,10 +56,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function getTotal() {
-    return (Number(clean.value) || 0) +
-           (Number(handle.value) || 0) +
-           (Number(pest.value) || 0) +
-           (Number(storage.value) || 0);
+    return (
+      (Number(clean.value) || 0) +
+      (Number(handle.value) || 0) +
+      (Number(pest.value) || 0) +
+      (Number(storage.value) || 0)
+    );
   }
 
   function getGrade(total) {
@@ -71,8 +80,15 @@ document.addEventListener("DOMContentLoaded", () => {
   async function saveInspection() {
     errorEl.textContent = "";
 
-    if (!stallSelect.value) return errorEl.textContent = "No stalls available.";
-    if (!officerName.value.trim()) return errorEl.textContent = "Officer name is required.";
+    if (!stallSelect.value) {
+      errorEl.textContent = "No stalls available.";
+      return;
+    }
+
+    if (!officerName.value.trim()) {
+      errorEl.textContent = "Officer name is required.";
+      return;
+    }
 
     if (clean.value < 0 || clean.value > 30) return errorEl.textContent = "Cleanliness must be 0–30";
     if (handle.value < 0 || handle.value > 30) return errorEl.textContent = "Food Handling must be 0–30";
@@ -83,7 +99,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const grade = getGrade(total);
 
     if ((grade === "C" || grade === "D") && !remarks.value.trim()) {
-      return errorEl.textContent = "Remarks required for Grade C or D.";
+      errorEl.textContent = "Remarks required for Grade C or D.";
+      return;
     }
 
     const stallText = stallSelect.options[stallSelect.selectedIndex].textContent;
@@ -91,7 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const stallName = rest.join(" - ");
 
     const inspection = {
-      date: new Date(), // stored as Firestore Timestamp
+      date: new Date(),
       stallId,
       stallName,
       officer: officerName.value.trim(),

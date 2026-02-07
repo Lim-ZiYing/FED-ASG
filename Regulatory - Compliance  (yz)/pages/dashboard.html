@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Inspection Dashboard</title>
+  <link rel="stylesheet" href="../inspection.css" />
+  <style>
+    /* ===== small back button top-left ===== */
+    .back-btn {
+      top: 12px;
+      left: 12px;
+      padding: 6px 10px;
+      width: auto;
+      font-size: 13px;
+      border-radius: 6px;
+      z-index: 999;
+    }
+
+    .dash-top {
+      margin-top: 40px; /* give space for fixed back button */
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .info {
+      background: white;
+      padding: 14px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      flex: 1;
+    }
+
+    .info h2 {
+      margin: 0 0 6px;
+      font-size: 20px;
+    }
+
+    .info p { margin: 4px 0; color: #444; }
+
+    .dash-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .quad {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      padding: 12px;
+    }
+
+    .quad-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .metric {
+      border: 1px solid #e3e3e3;
+      border-radius: 8px;
+      padding: 10px;
+      min-height: 180px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    .metric h3 {
+      margin: 0 0 8px;
+      font-size: 16px;
+      text-align: center;
+    }
+
+    .chart-wrap {
+      width: 140px;
+      height: 140px;
+      position: relative;
+    }
+
+    .center-text {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .total-card {
+      margin-top: 14px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      padding: 14px;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .total-left {
+      width: 220px;
+      height: 220px;
+      position: relative;
+    }
+
+    .total-left .center-text { font-size: 22px; }
+
+    /* ===== BIG GRADE CARD (replaces placeholder) ===== */
+    .grade-card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      padding: 18px;
+      text-align: center;
+    }
+
+    .grade-card h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+
+    .big-grade {
+      font-size: 90px;   /* ✅ bigger grade */
+      font-weight: 900;
+      line-height: 1;
+      margin: 10px 0;
+    }
+
+    .grade-desc {
+      margin-top: 8px;
+      font-size: 14px;
+      color: #444;
+    }
+
+    /* grade colors */
+    .gA { color: #2ecc71; }
+    .gB { color: #27ae60; }
+    .gC { color: #f39c12; }
+    .gD { color: #e74c3c; }
+
+    .remarks-box {
+      margin-top: 12px;
+      text-align: left;
+      border-top: 1px solid #eee;
+      padding-top: 12px;
+      font-size: 14px;
+      color: #333;
+    }
+
+    @media (max-width: 900px) {
+      .dash-grid { grid-template-columns: 1fr; }
+      .total-card { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Inspection Dashboard</h1>
+</header>
+
+<main>
+  <!-- Small back button top-left -->
+  <button class="back-btn" onclick="location.href='history.html'">← Back</button>
+
+  <!-- Top info -->
+  <div class="dash-top">
+    <div class="info">
+      <h2 id="stallTitle">Loading...</h2>
+      <p><b>Officer:</b> <span id="officerText">-</span></p>
+      <p><b>Date:</b> <span id="dateText">-</span></p>
+    </div>
+  </div>
+
+  <div class="dash-grid">
+    <!-- Left: component charts + total -->
+    <div>
+      <div class="quad">
+        <div class="quad-grid">
+          <div class="metric">
+            <h3>Cleanliness</h3>
+            <div class="chart-wrap">
+              <canvas id="cClean"></canvas>
+              <div class="center-text" id="tClean">0/30</div>
+            </div>
+          </div>
+
+          <div class="metric">
+            <h3>Food Handling</h3>
+            <div class="chart-wrap">
+              <canvas id="cHandle"></canvas>
+              <div class="center-text" id="tHandle">0/30</div>
+            </div>
+          </div>
+
+          <div class="metric">
+            <h3>Pest Control</h3>
+            <div class="chart-wrap">
+              <canvas id="cPest"></canvas>
+              <div class="center-text" id="tPest">0/20</div>
+            </div>
+          </div>
+
+          <div class="metric">
+            <h3>Storage / Temp</h3>
+            <div class="chart-wrap">
+              <canvas id="cStorage"></canvas>
+              <div class="center-text" id="tStorage">0/20</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="total-card">
+        <div class="total-left">
+          <canvas id="cTotal"></canvas>
+          <div class="center-text" id="tTotal">0/100</div>
+        </div>
+
+        <div>
+          <p><b>Total Score:</b> <span id="totalScoreText">0</span> / 100</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: BIG grade card -->
+    <div class="grade-card">
+      <h3>Overall Grade</h3>
+      <div id="bigGrade" class="big-grade gD">D</div>
+      <div class="grade-desc">A (Excellent) • B (Good) • C (Fair) • D (Poor)</div>
+
+      <div class="remarks-box">
+        <b>Remarks:</b>
+        <div id="remarksText">-</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script type="module" src="../scripts/firebase.js"></script>
+<script type="module" src="../scripts/dashboard.js"></script>
+</body>
+</html>

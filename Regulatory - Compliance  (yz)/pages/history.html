@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inspection History</title>
+  <link rel="stylesheet" href="../inspection.css">
+</head>
+<body>
+
+<header>
+  <h1>Inspection History</h1>
+</header>
+
+<main>
+  <button onclick="location.href='nea.html'">← Back to NEA Page</button>
+  <button onclick="location.href='inspection.html'">+ New Inspection</button>
+
+  <label>Filter by Grade</label>
+  <select id="gradeFilter">
+    <option value="">All</option>
+    <option>A</option><option>B</option><option>C</option><option>D</option>
+  </select>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Stall</th>
+        <th>Officer</th>
+        <th>Total</th>
+        <th>Grade</th>
+        <th>Dashboard</th>
+      </tr>
+    </thead>
+    <tbody id="historyBody"></tbody>
+  </table>
+</main>
+
+<script type="module" src="../scripts/firebase.js"></script>
+<script type="module" src="../scripts/history.js"></script>
+</body>
+</html>

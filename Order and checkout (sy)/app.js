@@ -1,3 +1,6 @@
+function cartIsEmpty() {
+  return !Array.isArray(cart) || cart.length === 0;
+}
 
 function safeNumber(v) {
   const n = Number(v);
@@ -297,6 +300,12 @@ function updateCheckoutTotal() {
 async function handlePaymentPage() {
   if (!resultText) return;
 
+  // ✅ Block payment if cart empty
+  if (!Array.isArray(cart) || cart.length === 0) {
+    resultText.textContent = "Cart is empty. Please add items before paying.";
+    return;
+  }
+
   const ok = Math.random() > 0.3;
   if (!ok) {
     resultText.textContent = "Payment Failed ❌";
@@ -337,7 +346,6 @@ async function handlePaymentPage() {
   saveCart();
   resultText.textContent = `Payment Successful ✅ Order saved! (${orderId})`;
 }
-
 // ============================
 // ORDER HISTORY PAGE
 // ============================

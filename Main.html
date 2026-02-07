@@ -3,36 +3,86 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Group App - Home</title>
+  <title>NEA Hawker Services Portal</title>
+
+  <!-- Shared styles & navbar -->
   <link rel="stylesheet" href="shared/style.css">
   <script defer src="shared/navbar.js"></script>
 </head>
+
 <body>
 
-  <!-- Navbar gets injected here -->
+  <!-- Shared Navigation Bar -->
   <div id="navbar"></div>
 
+  <!-- Government Masthead -->
+  <header class="gov-masthead">
+    <div class="container gov-masthead-inner">
+      <div>
+        <div class="gov-kicker">National Environment Agency (NEA)</div>
+        <h1 class="gov-title">Hawker Services Management Portal</h1>
+        <p class="gov-subtitle">
+          Internal system for regulatory compliance, operational management,
+          and digital services for hawker centres.
+        </p>
+      </div>
+
+  </header>
+
   <main class="container">
-    <h1>Group App Home</h1>
-    <p>Select a feature:</p>
 
-    <div class="cards">
-      <a class="card" href="feature_inspection/index.html">
-        <h2>Inspection Logging</h2>
-        <p>Record inspections, scores, grades, history.</p>
-      </a>
+    <!-- Announcements -->
+    <section class="gov-section">
+      <div class="notice">
+        <div class="notice-title">Announcements</div>
+        <ul class="notice-list">
+          <li>All scheduled inspections must be completed by the end of the week.</li>
+          <li>Ensure inspection records include remarks where applicable.</li>
+          <li>Use inspection history to support follow-up compliance checks.</li>
+        </ul>
+      </div>
+    </section>
 
-      <a class="card" href="feature_queue/index.html">
-        <h2>Queue Management</h2>
-        <p>Digital queue & notifications.</p>
-      </a>
+    
 
-      <a class="card" href="feature_feedback/index.html">
-        <h2>Feedback & Ratings</h2>
-        <p>Customer feedback analysis and viewing.</p>
-      </a>
-    </div>
-  </main>
+    <!-- System Modules -->
+    <section class="gov-section">
+      <h2 class="section-title">System Modules</h2>
 
-</body>
-</html>
+      <div class="gov-grid">
+
+        <a class="gov-tile" href="Regulatory & Compliance/index.html">
+          <div>
+            <div class="tile-badge">Compliance</div>
+            <div class="tile-title">Regulatory & Compliance</div>
+            <p class="tile-desc">
+              Conduct hygiene inspections, record scores, remarks,
+              and hygiene grades in accordance with NEA regulations.
+            </p>
+          </div>
+          <div class="tile-footer">
+            <span class="tile-btn">Open Module</span>
+          </div>
+        </a>
+
+        <a class="gov-tile" href="Operational Enhancements/index.html">
+          <div>
+            <div class="tile-badge">Operations</div>
+            <div class="tile-title">Operational Enhancements</div>
+            <p class="tile-desc">
+              Improve hawker centre operations through inspection history,
+              queue management, and service enhancements.
+            </p>
+          </div>
+          <div class="tile-footer">
+            <span class="tile-btn">Open Module</span>
+          </div>
+        </a>
+
+        <a class="gov-tile" href="Customer Engagement/index.html">
+          <div>
+            <div class="tile-badge">Engagement</div>
+            <div class="tile-title">Customer Engagement</div>
+            <p class="tile-desc">
+              Manage customer feedback, ratings, and complaints
+              to enhance service quality and public satisfaction.

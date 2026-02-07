@@ -1,80 +1,243 @@
+/* =========================
+   NEA / Gov Portal Styling
+   Colors:
+   Header: #2a9d8f
+   Body:   #e8efe8
+   ========================= */
+
 /* Reset */
-* {
-  box-sizing: border-box;
+* { box-sizing: border-box; }
+
+:root{
+  --header: #2a9d8f;
+  --body: #e8efe8;
+  --text: #1f2933;
+  --muted: rgba(31,41,51,0.75);
+  --card: #ffffff;
+  --border: rgba(0,0,0,0.10);
+  --shadow: 0 2px 10px rgba(0,0,0,0.08);
+  --shadowHover: 0 6px 18px rgba(0,0,0,0.12);
 }
 
-body {
+body{
   margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
-  background-color: #e8efe8;   /* body background */
-  color: #1f2933;
+  font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+  background: var(--body);
+  color: var(--text);
+  line-height: 1.5;
 }
 
 /* Layout */
-.container {
-  padding: 24px;
+.container{
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 22px;
 }
 
-/* Navbar */
-.navbar {
+/* =========================
+   Shared Navbar
+   ========================= */
+.navbar{
+  position: sticky;
+  top: 0;
+  z-index: 50;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 14px 22px;
-  background-color: #2a9d8f;   /* header background */
+  justify-content: space-between;
+  padding: 12px 22px;
+  background: var(--header);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.12);
 }
 
-.logo {
-  color: #ffffff;
-  font-size: 20px;
-  font-weight: bold;
+.logo{
+  color: #fff;
   text-decoration: none;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  font-size: 18px;
 }
 
-.nav-links a {
-  color: #ffffff;
+.nav-links{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.nav-links a{
+  color: #fff;
   text-decoration: none;
-  margin-left: 18px;
-  font-size: 15px;
+  font-size: 14px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  transition: background 0.15s ease;
 }
 
-.nav-links a:hover {
-  text-decoration: underline;
+.nav-links a:hover{
+  background: rgba(255,255,255,0.16);
 }
 
-/* Home cards */
-.cards {
+/* =========================
+   Gov Masthead
+   ========================= */
+.gov-masthead{
+  background: var(--header);
+  color: #fff;
+  padding: 22px 0 18px;
+  border-bottom: 1px solid rgba(255,255,255,0.25);
+}
+
+.gov-masthead-inner{
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 18px;
-  margin-top: 20px;
+  grid-template-columns: 1fr 270px;
+  gap: 16px;
+  align-items: start;
 }
 
-.card {
-  background-color: #ffffff;
-  border-radius: 10px;
-  padding: 18px;
+.gov-kicker{
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  opacity: 0.92;
+}
+
+.gov-title{
+  margin: 8px 0 6px;
+  font-size: 28px;
+  line-height: 1.2;
+  font-weight: 800;
+}
+
+.gov-subtitle{
+  margin: 0;
+  max-width: 760px;
+  opacity: 0.95;
+  font-size: 14.5px;
+}
+
+/* Meta Cards (top right) */
+.gov-meta{
+  display: grid;
+  gap: 10px;
+}
+
+/* =========================
+   MAIN PAGE MODULE UI
+   ========================= */
+
+/* Remove default link styling */
+.gov-tile {
   text-decoration: none;
-  color: #1f2933;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  color: inherit;
+}
+
+/* Module cards */
+.gov-tile {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 18px;
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.card:hover {
+.gov-tile:hover {
   transform: translateY(-3px);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.14);
 }
 
-/* Buttons (if used) */
-.btn {
-  display: inline-block;
-  padding: 10px 18px;
+/* Top section */
+.tile-title {
+  font-size: 16px;
+  font-weight: 800;
+  margin-top: 4px;
+}
+
+/* Description */
+.tile-desc {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: rgba(31,41,51,0.75);
+  margin: 12px 0 16px;
+}
+
+/* Footer button area */
+.tile-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Action button */
+.tile-btn {
   background-color: #2a9d8f;
   color: #ffffff;
-  text-decoration: none;
-  border-radius: 6px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
 }
 
-.btn:hover {
+.gov-tile:hover .tile-btn {
   background-color: #238a7d;
+  transform: translateY(-1px);
+}
+
+/* Badge refinement */
+.tile-badge {
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(42,157,143,0.12);
+  border: 1px solid rgba(42,157,143,0.3);
+}
+
+
+
+.meta-card{
+  background: rgba(255,255,255,0.14);
+  border: 1px solid rgba(255,255,255,0.24);
+  border-radius: 12px;
+  padding: 12
+  }
+
+
+/* =========================
+   Navbar Button Styling
+   ========================= */
+
+.nav-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 12px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.16);
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 13.5px;
+  font-weight: 700;
+  border: 1px solid rgba(255,255,255,0.28);
+  transition: background 0.15s ease, transform 0.12s ease;
+}
+
+.nav-btn:hover {
+  background: rgba(255,255,255,0.26);
+  transform: translateY(-1px);
+}
+
+/* Highlight Home button slightly */
+.nav-btn:first-child {
+  background: rgba(255,255,255,0.28);
 }

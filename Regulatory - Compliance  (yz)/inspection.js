@@ -1,6 +1,4 @@
-// inspections.js (Firebase version, student simple)
-
-import { db } from "./firebase.js";
+// inspections.js (Firebase version, student simple)import { db } from "./firebase.js";
 import {
   collection,
   addDoc,
@@ -9,6 +7,13 @@ import {
   query,
   orderBy
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+window.testFirebase = async function () {
+  const ref = collection(db, "test");
+  await addDoc(ref, { message: "Hello Firebase", time: Date.now() });
+  const snap = await getDocs(ref);
+  console.log("Docs in test collection:", snap.size);
+  alert("Firebase Firestore works ✅");
+};
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -45,25 +50,38 @@ document.addEventListener("DOMContentLoaded", () => {
   // ===== FUNCTIONS =====
 
   // Load stalls from Firebase (collection: stalls)
-  async function loadStalls() {
-    stallSelect.innerHTML = "";
 
-    try {
-      const snap = await getDocs(collection(db, "stalls"));
+async function loadStalls() {
+  stallSelect.innerHTML = "";
 
-      snap.forEach(docSnap => {
-        const s = docSnap.data();
-        const opt = document.createElement("option");
-        opt.value = s.stallId;
-        opt.textContent = `${s.stallId} - ${s.stallName}`;
-        stallSelect.appendChild(opt);
-      });
+  try {
+    // Order stalls by stallId ascending (S001 → S005)
+    const q = query(
+      collection(db, "stalls"),
+      orderBy("stallId", "asc")
+    );
 
-    } catch (err) {
-      console.error(err);
-      errorEl.textContent = "Failed to load stalls from Firebase.";
-    }
+    const snap = await getDocs(q);
+
+    snap.forEach(docSnap => {
+      const s = docSnap.data();
+
+      const id = s.stallId;
+      const name = s.stallName;
+
+      const opt = document.createElement("option");
+      opt.value = id;
+      opt.textContent = `${id} - ${name}`;
+
+      stallSelect.appendChild(opt);
+    });
+
+  } catch (err) {
+    console.error(err);
+    errorEl.textContent = "Failed to load stalls.";
   }
+}
+
 
   function getTotal() {
     return (
@@ -198,5 +216,6 @@ document.addEventListener("DOMContentLoaded", () => {
       historyBody.innerHTML = `<tr><td colspan="6">Error loading history.</td></tr>`;
     }
   }
+
 
 });

@@ -1,12 +1,18 @@
+// inspections.js (Firebase version, student simple)
 
+import { db } from "./firebase.js";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  query,
+  orderBy
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 document.addEventListener("DOMContentLoaded", () => {
 
-  const KEY_INSPECTIONS = "nea_inspections";
-  const KEY_STALLS = "hawker_stalls";
-
-
-
+  // ===== Get elements =====
   const stallSelect = document.getElementById("stallSelect");
   const officerName = document.getElementById("officerName");
   const clean = document.getElementById("clean");
@@ -23,14 +29,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const historyBody = document.getElementById("historyBody");
   const gradeFilter = document.getElementById("gradeFilter");
 
-
+  // ===== Init =====
   loadStalls();
-
-
   updatePreview();
   renderHistory();
 
-
+  // ===== Listeners =====
   [clean, handle, pest, storage].forEach(input => {
     input.addEventListener("input", updatePreview);
   });
@@ -40,33 +44,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ===== FUNCTIONS =====
 
-  function getStalls() {
-  try {
-    return JSON.parse(localStorage.getItem("hawker_stalls")) || [];
-  } catch {
-    return [];
-  }
-}
-
-
-  function loadStalls() {
-    const stalls = getStalls();
-
+  // Load stalls from Firebase (collection: stalls)
+  async function loadStalls() {
     stallSelect.innerHTML = "";
-    stalls.forEach(s => {
-      const opt = document.createElement("option");
-      opt.value = s.stallId;
-      opt.textContent = `${s.stallId} - ${s.stallName}`;
-      stallSelect.appendChild(opt);
-    });
+
+    try {
+      const snap = await getDocs(collection(db, "stalls"));
+
+      snap.forEach(docSnap => {
+        const s = docSnap.data();
+        const opt = document.createElement("option");
+        opt.value = s.stallId;
+        opt.textContent = `${s.stallId} - ${s.stallName}`;
+        stallSelect.appendChild(opt);
+      });
+
+    } catch (err) {
+      console.error(err);
+      errorEl.textContent = "Failed to load stalls from Firebase.";
+    }
   }
 
   function getTotal() {
-    const c = Number(clean.value) || 0;
-    const h = Number(handle.value) || 0;
-    const p = Number(pest.value) || 0;
-    const s = Number(storage.value) || 0;
-    return c + h + p + s;
+    return (
+      Number(clean.value) +
+      Number(handle.value) +
+      Number(pest.value) +
+      Number(storage.value)
+    );
   }
 
   function getGrade(total) {
@@ -78,52 +83,40 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function updatePreview() {
     const total = getTotal();
-    const grade = getGrade(total);
     totalScoreEl.textContent = total;
-    gradeEl.textContent = grade;
+    gradeEl.textContent = getGrade(total);
   }
 
-  function readInspections() {
-    const raw = localStorage.getItem(KEY_INSPECTIONS);
-    return raw ? JSON.parse(raw) : [];
-  }
-
-  function writeInspections(list) {
-    localStorage.setItem(KEY_INSPECTIONS, JSON.stringify(list));
-  }
-
-  function showRangeError(msg) {
+  function showError(msg) {
     errorEl.textContent = msg;
   }
 
-  function saveInspection() {
+  // Save inspection to Firebase (collection: inspections)
+  async function saveInspection() {
     errorEl.textContent = "";
 
     if (!officerName.value.trim()) {
-      errorEl.textContent = "Officer name is required.";
+      showError("Officer name is required.");
       return;
     }
 
-  
-    if (clean.value < 0 || clean.value > 30) return showRangeError("Cleanliness must be 0–30");
-    if (handle.value < 0 || handle.value > 30) return showRangeError("Food Handling must be 0–30");
-    if (pest.value < 0 || pest.value > 20) return showRangeError("Pest Control must be 0–20");
-    if (storage.value < 0 || storage.value > 20) return showRangeError("Storage/Temp must be 0–20");
+    if (clean.value < 0 || clean.value > 30) return showError("Cleanliness must be 0–30");
+    if (handle.value < 0 || handle.value > 30) return showError("Food Handling must be 0–30");
+    if (pest.value < 0 || pest.value > 20) return showError("Pest Control must be 0–20");
+    if (storage.value < 0 || storage.value > 20) return showError("Storage/Temp must be 0–20");
 
     const total = getTotal();
     const grade = getGrade(total);
 
     if ((grade === "C" || grade === "D") && !remarks.value.trim()) {
-      errorEl.textContent = "Remarks are required for Grade C or D.";
+      showError("Remarks required for Grade C or D.");
       return;
     }
 
-    const stalls = getStalls();
-    const stallId = stallSelect.value;
-    const stallName = stalls.find(s => s.stallId === stallId)?.stallName || "";
+    const stallText = stallSelect.options[stallSelect.selectedIndex].textContent;
+    const [stallId, stallName] = stallText.split(" - ");
 
     const inspection = {
-      id: Date.now(),
       date: new Date().toLocaleString(),
       stallId,
       stallName,
@@ -139,60 +132,71 @@ document.addEventListener("DOMContentLoaded", () => {
       remarks: remarks.value.trim()
     };
 
-    const list = readInspections();
-    list.unshift(inspection);
-    writeInspections(list);
+    try {
+      await addDoc(collection(db, "inspections"), inspection);
 
+      // reset form
+      clean.value = handle.value = pest.value = storage.value = 0;
+      remarks.value = "";
+      updatePreview();
 
-    clean.value = 0;
-    handle.value = 0;
-    pest.value = 0;
-    storage.value = 0;
-    remarks.value = "";
-    updatePreview();
+      alert("Inspection saved to Firebase!");
+      renderHistory();
 
-    renderHistory();
-    alert("Saved!");
+    } catch (err) {
+      console.error(err);
+      showError("Failed to save inspection.");
+    }
   }
 
-  function renderHistory() {
-    const filter = gradeFilter.value;
-    const list = readInspections();
-    const showList = filter ? list.filter(x => x.grade === filter) : list;
-
+  // Load inspection history from Firebase
+  async function renderHistory() {
     historyBody.innerHTML = "";
 
-    if (showList.length === 0) {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `<td colspan="6">No records found.</td>`;
-      historyBody.appendChild(tr);
-      return;
-    }
+    try {
+      const q = query(
+        collection(db, "inspections"),
+        orderBy("date", "desc")
+      );
 
-    showList.forEach(item => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${item.date}</td>
-        <td>${item.stallId} - ${item.stallName}</td>
-        <td>${item.officer}</td>
-        <td>${item.total}</td>
-        <td>${item.grade}</td>
-        <td><button data-id="${item.id}">Delete</button></td>
-      `;
+      const snap = await getDocs(q);
+      let records = [];
 
+      snap.forEach(d => records.push({ id: d.id, ...d.data() }));
 
-      tr.querySelector("button").addEventListener("click", () => {
-        deleteOne(item.id);
+      const filter = gradeFilter.value;
+      if (filter) {
+        records = records.filter(r => r.grade === filter);
+      }
+
+      if (records.length === 0) {
+        historyBody.innerHTML = `<tr><td colspan="6">No records found.</td></tr>`;
+        return;
+      }
+
+      records.forEach(item => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${item.date}</td>
+          <td>${item.stallId} - ${item.stallName}</td>
+          <td>${item.officer}</td>
+          <td>${item.total}</td>
+          <td>${item.grade}</td>
+          <td><button>Delete</button></td>
+        `;
+
+        tr.querySelector("button").addEventListener("click", async () => {
+          await deleteDoc(collection(db, "inspections").doc(item.id));
+          renderHistory();
+        });
+
+        historyBody.appendChild(tr);
       });
 
-      historyBody.appendChild(tr);
-    });
-  }
-
-  function deleteOne(id) {
-    const list = readInspections().filter(x => x.id !== id);
-    writeInspections(list);
-    renderHistory();
+    } catch (err) {
+      console.error(err);
+      historyBody.innerHTML = `<tr><td colspan="6">Error loading history.</td></tr>`;
+    }
   }
 
 });

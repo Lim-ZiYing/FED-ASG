@@ -1,16 +1,18 @@
 :root{
-  --bg:#f5f7fb;
+  --bg:#e8efe8;              /* body background */
   --card:#ffffff;
-  --text:#111827;
-  --muted:#6b7280;
-  --line:#e5e7eb;
-  --accent:#2563eb;
-  --accent2:#1d4ed8;
+  --text:#0f2f2a;            /* darker teal-friendly text */
+  --muted:#ffffff;
+  --line:#0f2f2a;
+  --accent:#0f2f2a;          /* primary teal */
+  --accent2:#21867a;         /* darker teal hover */
   --danger:#dc2626;
   --ok:#16a34a;
-  --shadow:0 10px 28px rgba(17,24,39,.08);
+
+  --shadow:0 10px 28px rgba(15,47,42,.10);
   --radius:16px;
 }
+
 
 *{box-sizing:border-box}
 body{
@@ -22,13 +24,19 @@ body{
 
 /* ===== Topbar ===== */
 .topbar{
-  position:sticky; top:0; z-index:10;
-  display:flex; justify-content:space-between; align-items:center;
+  position:sticky;
+  top:0;
+  z-index:10;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
   padding:14px 18px;
-  background:rgba(245,247,251,.92);
-  border-bottom:1px solid var(--line);
-  backdrop-filter: blur(8px);
+
+  background:#2a9d8f;        /* header color */
+  border-bottom:1px solid #21867a;
+  backdrop-filter:none;
 }
+
 .brand{display:flex; align-items:center; gap:10px}
 .logo{font-size:22px}
 .appname{font-weight:800; font-size:18px}

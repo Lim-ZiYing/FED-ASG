@@ -14,7 +14,7 @@
 <main id="checkoutView">
 
   <!-- Cart items -->
-  <div id="checkoutItems"></div>
+  <div id="checkoutList"></div>
 
   <!-- Add-ons -->
   <section class="panel">
@@ -28,18 +28,43 @@
     <h3>Delivery</h3>
 
     <label class="row">
-      <input type="radio" name="delivery" value="9">
+      <input type="radio" name="delivery" value="9" data-label="Priority">
       <span>Priority (+$9.00)</span>
     </label>
 
     <label class="row">
-      <input type="radio" name="delivery" value="6">
+      <input type="radio" name="delivery" value="6" data-label="Standard" checked>
       <span>Standard (+$6.00)</span>
     </label>
 
     <label class="row">
-      <input type="radio" name="delivery" value="4">
+      <input type="radio" name="delivery" value="4" data-label="Saver">
       <span>Saver (+$4.00)</span>
+    </label>
+  </section>
+
+  <!-- Payment method -->
+  <section class="panel">
+    <h3>Payment method</h3>
+
+    <label class="row">
+      <input type="radio" name="paymethod" value="applepay">
+      <span>Apple Pay</span>
+    </label>
+
+    <label class="row">
+      <input type="radio" name="paymethod" value="card" checked>
+      <span>Card</span>
+    </label>
+
+    <label class="row">
+      <input type="radio" name="paymethod" value="alipay">
+      <span>Alipay</span>
+    </label>
+
+    <label class="row">
+      <input type="radio" name="paymethod" value="nets">
+      <span>NETS</span>
     </label>
   </section>
 

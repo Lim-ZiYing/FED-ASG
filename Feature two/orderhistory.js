@@ -1,57 +1,135 @@
 import { db } from "./firebase.js";
-import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import {
+  collection,
+  query,
+  orderBy,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const ordersList = document.getElementById("ordersList");
+const loadingEl = document.getElementById("loading");
+const errorEl = document.getElementById("error");
+const emptyEl = document.getElementById("empty");
+const listEl = document.getElementById("orderList");
 
-// Optional: show only this member's orders
-const memberId = localStorage.getItem("memberId");
+function money(n) {
+  if (typeof n !== "number") return "-";
+  return `$${n.toFixed(2)}`;
+}
 
-async function loadOrders() {
-  const q = query(
-    collection(db, "orders"),
-    orderBy("createdAt", "desc")
-  );
+function formatDate(ts) {
+  if (!ts) return "-";
+  // Firestore Timestamp
+  if (ts.toDate) return ts.toDate().toLocaleString();
+  // If stored as string/number
+  return new Date(ts).toLocaleString();
+}
 
-  const snap = await getDocs(q);
-  ordersList.innerHTML = "";
+function safeText(v) {
+  return v === undefined || v === null || v === "" ? "-" : String(v);
+}
 
-  if (snap.empty) {
-    ordersList.innerHTML = "<p>No orders found.</p>";
-    return;
+function renderOrderCard(order) {
+  const docId = order.id;
+  const orderId = order.orderId || docId;
+  const statusText = order.statusText || "Unknown";
+  const updatedAt = formatDate(order.updatedAt);
+
+  // Optional fields (will show "-" if not present)
+  const payment = safeText(order.paymentMethod);
+  const total = order.totals?.total;
+  const deliveryType = safeText(order.addons?.deliveryType);
+  const deliveryFee = order.addons?.deliveryFee;
+  const takeaway = order.addons?.takeaway ? "Yes" : "No";
+  const takeawayFee = order.addons?.takeawayFee;
+
+  const card = document.createElement("div");
+  card.className = "card";
+
+  card.innerHTML = `
+    <div class="row">
+      <div>
+        <div class="id">${orderId}</div>
+        <div class="small">Updated: ${updatedAt}</div>
+      </div>
+      <div class="status">${statusText}</div>
+    </div>
+
+    <div class="grid">
+      <div>
+        <div class="label">Payment</div>
+        <div class="value">${payment}</div>
+      </div>
+
+      <div>
+        <div class="label">Total</div>
+        <div class="value">${total != null ? money(total) : "-"}</div>
+      </div>
+
+      <div>
+        <div class="label">Delivery</div>
+        <div class="value">${deliveryType} ${deliveryFee != null ? `(${money(deliveryFee)})` : ""}</div>
+      </div>
+
+      <div>
+        <div class="label">Takeaway</div>
+        <div class="value">${takeaway} ${takeawayFee != null ? `(${money(takeawayFee)})` : ""}</div>
+      </div>
+    </div>
+  `;
+
+  // Items (optional)
+  if (Array.isArray(order.items) && order.items.length > 0) {
+    const itemsDiv = document.createElement("div");
+    itemsDiv.className = "items";
+
+    const itemsTitle = document.createElement("div");
+    itemsTitle.className = "label";
+    itemsTitle.textContent = "Items";
+    itemsDiv.appendChild(itemsTitle);
+
+    order.items.forEach((it) => {
+      const row = document.createElement("div");
+      row.className = "itemRow";
+      const name = safeText(it.name);
+      const qty = Number(it.qty || 0);
+      const price = Number(it.price || 0);
+      row.innerHTML = `<span>${name} x${qty}</span><span>${money(price * qty)}</span>`;
+      itemsDiv.appendChild(row);
+    });
+
+    card.appendChild(itemsDiv);
   }
 
-  snap.forEach(doc => {
-    const order = doc.data();
+  return card;
+}
 
-    // Filter by member (optional but good)
-    if (memberId && order.createdBy !== memberId) return;
+async function loadOrders() {
+  try {
+    loadingEl.style.display = "block";
+    emptyEl.style.display = "none";
+    errorEl.textContent = "";
+    listEl.innerHTML = "";
 
-    const div = document.createElement("div");
-    div.className = "order-history-item";
+    // ✅ Query all orders (no filters)
+    const q = query(collection(db, "orders"), orderBy("updatedAt", "desc"));
+    const snap = await getDocs(q);
 
-    div.innerHTML = `
-      <h4>Order by: ${order.createdBy}</h4>
-      <p>Status: ${order.status}</p>
-      <p>Total: $${order.total.toFixed(2)}</p>
-      <ul>
-        ${order.items.map(i => `
-          <li>
-            ${i.name} (${i.stall}) x ${i.qty}
-            ${i.selectedAddons?.length
-              ? `<br>Add-ons: ${i.selectedAddons.map(a => a.name).join(", ")}`
-              : ""}
-          </li>
-        `).join("")}
-      </ul>
-      <hr>
-    `;
+    const orders = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 
-    ordersList.appendChild(div);
-  });
+    loadingEl.style.display = "none";
+
+    if (orders.length === 0) {
+      emptyEl.style.display = "block";
+      return;
+    }
+
+    orders.forEach((o) => listEl.appendChild(renderOrderCard(o)));
+  } catch (err) {
+    console.error(err);
+    loadingEl.style.display = "none";
+    errorEl.textContent =
+      "Cannot load orders. Check: (1) Firestore rules (2) your firebase config (3) updatedAt field exists.";
+  }
 }
 
 loadOrders();
-
-window.goBack = function () {
-  location.href = "menu.html";
-};

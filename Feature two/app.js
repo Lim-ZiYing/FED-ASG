@@ -75,9 +75,7 @@ async function loadMenuFromFirestore() {
   return stalls;
 }
 
-// ============================
-// MENU PAGE
-// ============================
+
 function renderMenuPage(stalls) {
   menuDiv.innerHTML = "";
 

@@ -1,6 +1,4 @@
-// ============================
-// Helpers + Cart Storage
-// ============================
+
 function safeNumber(v) {
   const n = Number(v);
   return Number.isNaN(n) ? 0 : n;
@@ -21,7 +19,7 @@ function escapeHtml(text) {
     .replaceAll("'", "&#039;");
 }
 
-// Save / load checkout selections (add-ons + payment)
+// Checkout add-ons storage
 function saveCheckoutState(state) {
   localStorage.setItem("checkoutState", JSON.stringify(state));
 }
@@ -46,8 +44,6 @@ const cartTotal = document.getElementById("cartTotal");
 const checkoutList = document.getElementById("checkoutList");
 const checkoutTotal = document.getElementById("checkoutTotal");
 const addonTakeaway = document.getElementById("addonTakeaway");
-
-// OPTIONAL: add these in your checkout.html (recommended)
 const paymentRadios = document.querySelectorAll('input[name="paymethod"]');
 
 const resultText = document.getElementById("resultText");
@@ -92,13 +88,16 @@ async function loadMenuFromFirestore() {
   return stalls;
 }
 
+// ============================
+// MENU PAGE
+// ============================
 function renderMenuPage(stalls) {
+  if (!menuDiv) return;
   menuDiv.innerHTML = "";
 
   stalls.forEach((stall) => {
     const stallDiv = document.createElement("section");
     stallDiv.className = "stall";
-
     stallDiv.innerHTML = `<h2 class="stall-title">${escapeHtml(stall.name)}</h2>`;
 
     stall.items.forEach((item) => {
@@ -156,6 +155,8 @@ function updateMenuTotal() {
 // CART PAGE
 // ============================
 function renderCartPage() {
+  if (!cartList || !cartTotal) return;
+
   cartList.innerHTML = "";
 
   if (cart.length === 0) {
@@ -169,7 +170,9 @@ function renderCartPage() {
     div.className = "cart-item";
 
     div.innerHTML = `
-      <div class="cart-title">${escapeHtml(item.name)} <span class="muted">(${escapeHtml(item.stall)})</span></div>
+      <div class="cart-title">${escapeHtml(item.name)}
+        <span class="muted">(${escapeHtml(item.stall)})</span>
+      </div>
       <div class="cart-row">
         <span>$${safeNumber(item.price).toFixed(2)} × ${safeNumber(item.qty)}</span>
         <button class="btn small" type="button">Remove</button>
@@ -190,9 +193,11 @@ function renderCartPage() {
 }
 
 // ============================
-// CHECKOUT PAGE (add-ons + payment selection stored)
+// CHECKOUT PAGE
 // ============================
 function renderCheckoutPage() {
+  if (!checkoutList || !checkoutTotal) return;
+
   checkoutList.innerHTML = "";
 
   if (cart.length === 0) {
@@ -205,22 +210,22 @@ function renderCheckoutPage() {
     const div = document.createElement("div");
     div.className = "checkout-item";
     div.innerHTML = `
-      <div><b>${escapeHtml(item.name)}</b> <span class="muted">(${escapeHtml(item.stall)})</span></div>
+      <div><b>${escapeHtml(item.name)}</b>
+        <span class="muted">(${escapeHtml(item.stall)})</span>
+      </div>
       <div>$${safeNumber(item.price).toFixed(2)} × ${safeNumber(item.qty)}</div>
     `;
     checkoutList.appendChild(div);
   });
 
-  // restore previous selections
+  // Restore previous selections
   const state = loadCheckoutState();
   if (addonTakeaway) addonTakeaway.checked = !!state.takeaway;
 
-  // delivery radios restore by matching value
   document.querySelectorAll('input[name="delivery"]').forEach((r) => {
     if (safeNumber(r.value) === safeNumber(state.deliveryFee)) r.checked = true;
   });
 
-  // payment radios restore (optional)
   if (paymentRadios && paymentRadios.length) {
     paymentRadios.forEach((r) => {
       if (r.value === state.paymentMethod) r.checked = true;
@@ -246,11 +251,8 @@ function wireCheckoutOptions() {
     });
   });
 
-  // payment method radios (optional)
   if (paymentRadios && paymentRadios.length) {
-    paymentRadios.forEach((r) => {
-      r.addEventListener("change", persistCheckoutState);
-    });
+    paymentRadios.forEach((r) => r.addEventListener("change", persistCheckoutState));
   }
 }
 
@@ -258,7 +260,6 @@ function getSelectedDelivery() {
   const selected = document.querySelector('input[name="delivery"]:checked');
   if (!selected) return { fee: 0, label: "None" };
 
-  // If your radio has data-label="Priority", use it. Else label becomes the id/value.
   const label = selected.dataset?.label || selected.id || "Delivery";
   return { fee: safeNumber(selected.value), label };
 }
@@ -291,12 +292,12 @@ function updateCheckoutTotal() {
 }
 
 // ============================
-// PAYMENT (demo) + save order (SAVES FULL FIELDS)
+// PAYMENT PAGE
 // ============================
 async function handlePaymentPage() {
-  // demo payment success/fail
-  const ok = Math.random() > 0.3;
+  if (!resultText) return;
 
+  const ok = Math.random() > 0.3;
   if (!ok) {
     resultText.textContent = "Payment Failed ❌";
     return;
@@ -309,49 +310,39 @@ async function handlePaymentPage() {
   const deliveryFee = safeNumber(state.deliveryFee);
   const total = base + takeawayFee + deliveryFee;
 
-  resultText.textContent = "Payment Successful ✅ Saving order...";
-
-  // ✅ create readable orderId
   const orderId = "ORD-" + Math.floor(1000 + Math.random() * 9000);
 
-  // ✅ save a complete order document (matches what order history can display)
+  resultText.textContent = "Payment Successful ✅ Saving order...";
+
   await db.collection("orders").add({
     orderId,
-
-    statusIndex: 1,
     statusText: "Paid",
-
     paymentMethod: state.paymentMethod,
-
     addons: {
       takeaway: !!state.takeaway,
       takeawayFee,
       deliveryType: state.deliveryLabel,
       deliveryFee,
     },
-
     totals: {
       itemsSubtotal: base,
       total,
     },
-
     items: cart,
-
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
   });
 
-  // clear cart after payment
   cart = [];
   saveCart();
-
   resultText.textContent = `Payment Successful ✅ Order saved! (${orderId})`;
 }
 
 // ============================
-// ORDER HISTORY (FIXED: orderBy updatedAt, safe render)
+// ORDER HISTORY PAGE
 // ============================
 async function renderOrderHistory() {
+  if (!orderHistoryDiv) return;
   orderHistoryDiv.innerHTML = "<p>Loading...</p>";
 
   try {
@@ -367,65 +358,53 @@ async function renderOrderHistory() {
     snap.forEach((doc) => {
       const o = doc.data();
       const itemsCount = Array.isArray(o.items) ? o.items.length : 0;
-
-      const total =
-        (o.totals && typeof o.totals.total === "number")
-          ? o.totals.total
-          : safeNumber(o.total); // supports your old format too
+      const total = o.totals?.total ?? 0;
 
       const card = document.createElement("div");
       card.className = "order-card";
-
       card.innerHTML = `
         <div><b>Order:</b> ${escapeHtml(o.orderId || doc.id)}</div>
         <div><b>Items:</b> ${itemsCount}</div>
         <div><b>Total:</b> $${safeNumber(total).toFixed(2)}</div>
-        <div class="muted"><b>Status:</b> ${escapeHtml(o.statusText || o.status || "Unknown")}</div>
+        <div class="muted"><b>Status:</b> ${escapeHtml(o.statusText || "Unknown")}</div>
         <div class="muted"><b>Payment:</b> ${escapeHtml(o.paymentMethod || "-")}</div>
       `;
-
       orderHistoryDiv.appendChild(card);
     });
   } catch (err) {
-    console.error("Order history error:", err);
+    console.error(err);
     orderHistoryDiv.innerHTML =
-      "<p>Cannot load orders. Check console for error (rules / missing index / missing field).</p>";
+      "<p>Cannot load orders. Check console (rules / missing index / missing field).</p>";
   }
 }
 
 // ============================
-// Navigation
+// Navigation functions
 // ============================
 function goCart() { location.href = "cart.html"; }
-function goCheckout() {
-  // save selections before leaving
-  persistCheckoutState();
-  location.href = "checkout.html";
-}
-function makePayment() {
-  // save selections before leaving
-  persistCheckoutState();
-  location.href = "payment.html";
-}
+function goCheckout() { persistCheckoutState(); location.href = "checkout.html"; }
+function makePayment() { persistCheckoutState(); location.href = "payment.html"; }
+
+window.goCart = goCart;
+window.goCheckout = goCheckout;
+window.makePayment = makePayment;
 
 // ============================
 // Page init
 // ============================
 document.addEventListener("DOMContentLoaded", async () => {
-  if (menuDiv) {
-    const stalls = await loadMenuFromFirestore();
-    renderMenuPage(stalls);
-    updateMenuTotal();
+  try {
+    if (menuDiv) {
+      const stalls = await loadMenuFromFirestore();
+      renderMenuPage(stalls);
+      updateMenuTotal();
+    }
+
+    if (cartList) renderCartPage();
+    if (checkoutList) renderCheckoutPage();
+    if (resultText) await handlePaymentPage();
+    if (orderHistoryDiv) await renderOrderHistory();
+  } catch (e) {
+    console.error("Init error:", e);
   }
-
-  if (cartList) renderCartPage();
-
-  if (checkoutList) renderCheckoutPage();
-
-  if (resultText) await handlePaymentPage();
-
-  if (orderHistoryDiv) await renderOrderHistory();
 });
-window.goCart = goCart;
-window.goCheckout = goCheckout;
-window.makePayment = makePayment;

@@ -1,0 +1,155 @@
+/* orderhistory.css */
+body {
+  background: #f6f7fb;
+}
+
+.topbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 18px 24px;
+  background: white;
+  border-bottom: 1px solid #e9e9ef;
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.sub {
+  margin: 6px 0 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 18px auto;
+  padding: 0 18px 30px;
+}
+
+.toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  border: 1px solid #e9e9ef;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 14px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+@media (max-width: 820px) {
+  .grid { grid-template-columns: 1fr; }
+}
+
+.card {
+  background: white;
+  border: 1px solid #e9e9ef;
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 1px 8px rgba(0,0,0,0.03);
+}
+
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.order-id {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.badge {
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid #e9e9ef;
+  background: #fafafa;
+}
+
+.badge.paid { background: #e9fbf0; border-color: #bfe8cc; }
+.badge.fail { background: #ffecec; border-color: #f2b8b8; }
+
+.meta {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  color: #333;
+  font-size: 14px;
+}
+
+.meta div span {
+  color: #666;
+  display: block;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.items {
+  margin-top: 12px;
+  border-top: 1px dashed #e9e9ef;
+  padding-top: 12px;
+}
+
+.item-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  font-size: 14px;
+}
+
+.item-row .left {
+  display: flex;
+  flex-direction: column;
+}
+
+.item-row .muted {
+  color: #666;
+  font-size: 12px;
+}
+
+.total-line {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  font-weight: 800;
+  font-size: 15px;
+  padding-top: 10px;
+  border-top: 1px solid #f0f0f5;
+}
+
+.btn {
+  background: #111;
+  color: white;
+  border: none;
+  padding: 9px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.btn.ghost {
+  background: transparent;
+  color: #111;
+  border: 1px solid #e0e0ea;
+}

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Vendor Queue Main</title>
+  <link rel="stylesheet" href="../main.css">
+</head>
+<body>
+
+<header>Vendor Queue System</header>
+
+<main>
+  <div class="panel">
+    <h2>Select Your Stall</h2>
+
+    <label for="stallSelect">Stall Name</label>
+    <select id="stallSelect">
+      <option>Loading stalls...</option>
+    </select>
+
+    <div class="row">
+      <button class="btnDark" id="openBtn">Open Queue System</button>
+      <button class="btnLight" id="refreshBtn" type="button">Refresh</button>
+    </div>
+
+    <div class="msg" id="msg"></div>
+  </div>
+</main>
+
+<script type="module" src="../scripts/main.js"></script>
+</body>
+</html>

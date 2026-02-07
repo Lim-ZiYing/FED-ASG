@@ -1,0 +1,228 @@
+/* ===============================
+   Shared Queue System Styles
+   =============================== */
+
+:root{
+  --border:#d6ded6;
+  --bg:#e8efe8;
+  --text:#0f1f1c;
+  --muted:#5f7f78;
+  --card:#ffffff;
+  --header:#2a9d8f;
+  --headerText:#ffffff;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  font-family: Arial, sans-serif;
+  color:var(--text);
+  background:var(--bg);
+}
+
+/* ---------- Header ---------- */
+header{
+  background:var(--header);
+  border-bottom:1px solid #1f7f73;
+  color:var(--headerText);
+}
+
+.headerBar{
+  display:grid;
+  grid-template-columns: 120px 1fr 120px;
+  align-items:center;
+  gap:8px;
+  padding:10px 12px;
+}
+
+.headerTitle{
+  text-align:center;
+  font-weight:900;
+  letter-spacing:0.3px;
+  font-size:18px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.backBtn{
+  justify-self:start;
+  border:1px solid #b9e3dd;
+  border-radius:10px;
+  padding:10px 12px;
+  cursor:pointer;
+  font-weight:900;
+  background:#eef6f5;
+  color:#136f63;
+}
+
+/* ---------- Layout ---------- */
+main{
+  max-width:1100px;
+  margin:16px auto;
+  padding:0 16px 20px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns: 360px 1fr;
+  gap:14px;
+  align-items:start;
+}
+
+.panel{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:14px;
+}
+
+h1, h2{
+  margin:0 0 10px;
+  font-size:16px;
+  color:#1f4f48;
+}
+
+/* ---------- Queue ---------- */
+.queueRow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  margin-bottom:10px;
+  background:#ffffff;
+}
+
+.queueNum{
+  font-weight:700;
+}
+
+.pill{
+  font-size:12px;
+  padding:5px 10px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:#eef6f5;
+  color:#1f4f48;
+}
+
+.pill.waiting{
+  background:#eef6f5;
+}
+
+.pill.serving{
+  background:#d7f1ed;
+  border-color:#a6ded6;
+  color:#136f63;
+}
+
+.subtext{
+  color:var(--muted);
+  font-size:12px;
+  margin-top:6px;
+}
+
+/* ---------- Now Serving ---------- */
+.nowServingBox{
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:12px;
+  background:#ffffff;
+}
+
+.nowTop{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:8px;
+}
+
+.nowValue{
+  font-size:22px;
+  font-weight:900;
+  letter-spacing:0.5px;
+  color:#136f63;
+}
+
+.navBtns{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+/* ---------- Orders ---------- */
+.orderCard{
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:12px;
+  margin-bottom:12px;
+  background:#ffffff;
+}
+
+.orderHeader{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:8px;
+}
+
+.orderNo{
+  font-weight:900;
+}
+
+.items{
+  margin:0;
+  padding-left:18px;
+  color:#222;
+}
+
+.items li{
+  margin:4px 0;
+}
+
+/* ---------- Buttons ---------- */
+button{
+  border:0;
+  border-radius:10px;
+  padding:10px 12px;
+  cursor:pointer;
+  font-weight:900;
+}
+
+.btnDark{
+  background:#2a9d8f;
+  color:#ffffff;
+}
+
+.btnLight{
+  background:#eef6f5;
+  color:#136f63;
+  border:1px solid #b9e3dd;
+}
+
+button:disabled{
+  opacity:0.5;
+  cursor:not-allowed;
+}
+
+/* ---------- Empty ---------- */
+.empty{
+  color:var(--muted);
+  font-size:13px;
+  padding:10px;
+  border:1px dashed var(--border);
+  border-radius:10px;
+  background:#ffffff;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px){
+  .grid{
+    grid-template-columns: 1fr;
+  }
+}

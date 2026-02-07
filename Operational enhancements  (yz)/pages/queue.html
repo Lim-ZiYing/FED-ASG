@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Live Queue System</title>
+  <link rel="stylesheet" href="../queue.css">
+</head>
+<body>
+
+<header>
+  <div class="headerBar">
+    <button class="backBtn" id="backBtn">← Back</button>
+    <div class="headerTitle" id="stallTitle">Queue</div>
+    <div></div>
+  </div>
+</header>
+
+<main>
+  <div class="grid">
+
+    <section>
+      <div class="panel">
+        <h2>Current Queue</h2>
+        <div id="queueList"></div>
+        <div class="subtext">Total waiting: <b id="totalWaiting">0</b></div>
+      </div>
+
+      <div class="panel">
+        <h2>Now Serving</h2>
+        <div class="nowServingBox">
+          <div class="nowTop">
+            <div>
+              <div class="subtext">Order ID</div>
+              <div class="nowValue" id="nowServingNo">—</div>
+            </div>
+            <div class="navBtns">
+              <button class="btnLight" id="prevBtn">▲ Prev</button>
+              <button class="btnLight" id="nextBtn">▼ Next</button>
+            </div>
+          </div>
+          <div class="subtext" id="nowServingHint">No active orders.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Orders</h2>
+      <div id="ordersList"></div>
+    </section>
+
+  </div>
+</main>
+
+<script type="module" src="../scripts/queue.js"></script>
+</body>
+</html>

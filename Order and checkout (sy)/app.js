@@ -341,15 +341,26 @@ async function handlePaymentPage() {
 // ============================
 // ORDER HISTORY PAGE
 // ============================
+function formatDate(ts) {
+  if (!ts) return "-";
+  // Firestore Timestamp -> JS Date
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleString();
+}
+
 async function renderOrderHistory() {
   if (!orderHistoryDiv) return;
-  orderHistoryDiv.innerHTML = "<p>Loading...</p>";
+
+  orderHistoryDiv.innerHTML = `<p>Loading…</p>`;
 
   try {
     const snap = await db.collection("orders").orderBy("updatedAt", "desc").get();
 
+    const countEl = document.getElementById("orderCount");
+    if (countEl) countEl.textContent = `${snap.size} order(s)`;
+
     if (snap.empty) {
-      orderHistoryDiv.innerHTML = "<p>No orders yet.</p>";
+      orderHistoryDiv.innerHTML = `<div class="card"><b>No orders yet.</b><div class="muted">Make a payment to generate an order.</div></div>`;
       return;
     }
 
@@ -357,26 +368,79 @@ async function renderOrderHistory() {
 
     snap.forEach((doc) => {
       const o = doc.data();
-      const itemsCount = Array.isArray(o.items) ? o.items.length : 0;
-      const total = o.totals?.total ?? 0;
+
+      const orderId = o.orderId || doc.id;
+      const status = (o.statusText || o.status || "Unknown").toLowerCase();
+      const isPaid = status.includes("paid");
+
+      const created = o.createdAt || o.updatedAt;
+      const dateText = formatDate(created);
+
+      const items = Array.isArray(o.items) ? o.items : [];
+      const itemsSubtotal = o.totals?.itemsSubtotal ?? 0;
+      const total = o.totals?.total ?? o.total ?? 0;
+
+      const paymentMethod = o.paymentMethod || "-";
+      const takeawayFee = o.addons?.takeawayFee ?? 0;
+      const deliveryFee = o.addons?.deliveryFee ?? 0;
+      const deliveryType = o.addons?.deliveryType ?? "None";
 
       const card = document.createElement("div");
-      card.className = "order-card";
+      card.className = "card";
+
+      const itemsHtml = items
+        .slice(0, 5)
+        .map((it) => {
+          const qty = Number(it.qty || 1);
+          const price = Number(it.price || 0);
+          const line = (price * qty).toFixed(2);
+
+          return `
+            <div class="item-row">
+              <div class="left">
+                <div><b>${escapeHtml(it.name)}</b></div>
+                <div class="muted">${escapeHtml(it.stall || "")} • $${price.toFixed(2)} × ${qty}</div>
+              </div>
+              <div>$${line}</div>
+            </div>
+          `;
+        })
+        .join("");
+
+      const moreCount = items.length > 5 ? (items.length - 5) : 0;
+
       card.innerHTML = `
-        <div><b>Order:</b> ${escapeHtml(o.orderId || doc.id)}</div>
-        <div><b>Items:</b> ${itemsCount}</div>
-        <div><b>Total:</b> $${safeNumber(total).toFixed(2)}</div>
-        <div class="muted"><b>Status:</b> ${escapeHtml(o.statusText || "Unknown")}</div>
-        <div class="muted"><b>Payment:</b> ${escapeHtml(o.paymentMethod || "-")}</div>
+        <div class="card-head">
+          <div class="order-id">${escapeHtml(orderId)}</div>
+          <div class="badge ${isPaid ? "paid" : "fail"}">${isPaid ? "PAID" : "FAILED"}</div>
+        </div>
+
+        <div class="meta">
+          <div><span>Date</span>${escapeHtml(dateText)}</div>
+          <div><span>Payment</span>${escapeHtml(paymentMethod)}</div>
+          <div><span>Delivery</span>${escapeHtml(deliveryType)} (+$${Number(deliveryFee).toFixed(2)})</div>
+          <div><span>Takeaway</span>+$${Number(takeawayFee).toFixed(2)}</div>
+        </div>
+
+        <div class="items">
+          ${itemsHtml}
+          ${moreCount ? `<div class="muted">+ ${moreCount} more item(s)…</div>` : ``}
+        </div>
+
+        <div class="total-line">
+          <div>Total</div>
+          <div>$${Number(total).toFixed(2)}</div>
+        </div>
       `;
+
       orderHistoryDiv.appendChild(card);
     });
   } catch (err) {
     console.error(err);
-    orderHistoryDiv.innerHTML =
-      "<p>Cannot load orders. Check console (rules / missing index / missing field).</p>";
+    orderHistoryDiv.innerHTML = `<div class="card"><b>Cannot load orders.</b><div class="muted">Check Firestore rules / console error.</div></div>`;
   }
 }
+
 
 // ============================
 // Navigation functions

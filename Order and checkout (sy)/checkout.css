@@ -61,26 +61,9 @@ main{
 
 /* Total bar */
 .big-total{
-<<<<<<< HEAD
-  font-size: 20px;
-  font-weight: 800;
-  margin-top: 16px;
-}
-
-.actions{
-  margin-top: 14px;
-}
-
-.primary{
-  width:100%;
-  background:#2a9d8f;
-  color:#fff;
-  border:none;
-=======
   background:#ffffff;
   border:1px solid #e5e7eb;
   border-radius:14px;
->>>>>>> 8cf220660e322f62386d2407e377e22e16ef3cbd
   padding:14px 16px;
   font-size:18px;
   font-weight:900;

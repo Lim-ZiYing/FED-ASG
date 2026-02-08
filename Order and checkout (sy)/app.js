@@ -313,11 +313,11 @@ async function handlePaymentPage() {
     return;
   }
 
- // const ok = Math.random() > 0.3;
-  //if (!ok) {
-    //resultText.textContent = "Payment Failed ❌";
-    //return;
-  //}
+const ok = Math.random() > 0.3;
+  if (!ok) {
+    resultText.textContent = "Payment Failed ❌";
+    return;
+  }
 
   const base = cart.reduce((sum, i) => sum + safeNumber(i.price) * safeNumber(i.qty), 0);
   const state = loadCheckoutState();

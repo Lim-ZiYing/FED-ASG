@@ -1,3 +1,16 @@
+// app.js (MODULE VERSION)
+
+// ===== Firebase feature APIs =====
+import {
+  listenReviews,
+  addReview,
+  listenComplaints,
+  addComplaint,
+  markComplaintResolved,
+  listenMenuLikes,
+  toggleLikeCount
+} from "./engagement-firebase.js";
+
 /* =============================
    Helpers
 ============================= */
@@ -26,43 +39,39 @@ function escapeHtml(str) {
 function qs(id){ return document.getElementById(id); }
 
 /* =============================
-   Data
+   Data (update this to match your team if needed)
 ============================= */
 const STALLS = [
-  { id:"S001", name:"Ah Hock Chicken Rice", cuisine:["Chinese"], unit:"#01-12" },
-  { id:"S002", name:"Mdm Tan Noodles", cuisine:["Chinese"], unit:"#01-15" },
-  { id:"S003", name:"Spice Corner", cuisine:["Indian"], unit:"#01-20" },
-  { id:"S004", name:"Vegemania", cuisine:["Vegetarian"], unit:"#01-23" },
-  { id:"S005", name:"Nasi Pandang", cuisine:["Indonesian"], unit:"#01-27" }
+  { id:"S001", name:"Ah Hock Chicken Rice", cuisine:["Chinese"], unit:"#01-12", ratingHint:"Fast & popular" },
+  { id:"S002", name:"Mdm Tan Noodles", cuisine:["Chinese"], unit:"#01-15", ratingHint:"Noodles" },
+  { id:"S003", name:"Spice Corner", cuisine:["Indian"], unit:"#01-20", ratingHint:"Spicy" },
+  { id:"S004", name:"Vegemania", cuisine:["Vegetarian"], unit:"#01-23", ratingHint:"Healthy" },
+  { id:"S005", name:"Nasi Pandang", cuisine:["Indonesian"], unit:"#01-27", ratingHint:"Nasi" }
 ];
 
-
+// ⚠️ Keep your own menu mapping; item.id must be stable for likes
 const MENU_BY_STALL = {
   S001: [
-    { id: "cr_steamed", name: "Steamed Chicken Rice", price: 4.0, cuisine: "Chinese" },
-    { id: "cr_roasted", name: "Roasted Chicken Rice", price: 4.5, cuisine: "Chinese" },
-    { id: "charsiew", name: "Char Siew Rice", price: 4.8, cuisine: "Chinese" }
+    { id:"chicken_rice", name:"Chicken Rice", price:5.00, cuisine:"Chinese" },
+    { id:"roast_pork", name:"Roasted Pork Rice", price:5.50, cuisine:"Chinese" }
   ],
-
   S002: [
-    { id: "mee_pok", name: "Mee Pok", price: 4.0, cuisine: "Chinese" },
-    { id: "mee_kia", name: "Mee Kia", price: 4.0, cuisine: "Chinese" }
+    { id:"banmian", name:"Ban Mian", price:4.80, cuisine:"Chinese" },
+    { id:"fishball_noodles", name:"Fishball Noodles", price:4.50, cuisine:"Chinese" }
   ],
-
   S003: [
-    { id: "chicken_curry", name: "Chicken Curry", price: 5.5, cuisine: "Indian" },
-    { id: "mutton_curry", name: "Mutton Curry", price: 6.5, cuisine: "Indian" }
+    { id:"briyani", name:"Chicken Briyani", price:6.50, cuisine:"Indian" },
+    { id:"prata_set", name:"Prata Set", price:4.20, cuisine:"Indian" }
   ],
-
   S004: [
-    { id: "veg_rice", name: "Vegetarian Rice", price: 4.5, cuisine: "Vegetarian" }
+    { id:"veggie_bowl", name:"Veggie Bowl", price:6.00, cuisine:"Vegetarian" },
+    { id:"tofu_salad", name:"Tofu Salad", price:5.50, cuisine:"Vegetarian" }
   ],
-
   S005: [
-    { id: "nasi_pandang", name: "Nasi Padang", price: 6.0, cuisine: "Indonesian" }
+    { id:"nasi_padang", name:"Nasi Padang", price:6.80, cuisine:"Indonesian" },
+    { id:"rendang", name:"Beef Rendang Rice", price:7.50, cuisine:"Indonesian" }
   ]
 };
-
 
 /* =============================
    Language (simple)
@@ -104,7 +113,6 @@ const I18N = {
     payment:"Payment info & amount",
     reward:"Any reward earned",
 
-    // report page enhancements
     backStall: "Stall",
     reportPageTitle: "Report Page",
     reportPageSubtitle: "Submit a complaint linked to the selected stall.",
@@ -163,7 +171,6 @@ const I18N = {
     payment:"付款信息和金额",
     reward:"获得的奖励",
 
-    // report page enhancements
     backStall: "摊位",
     reportPageTitle: "投诉页面",
     reportPageSubtitle: "提交与当前摊位关联的投诉。",
@@ -209,6 +216,8 @@ function setupLangToggle(){
   btn.addEventListener("click", ()=>{
     lang = (lang === "en") ? "zh" : "en";
     applyLang();
+    // refresh home "View" buttons
+    document.querySelectorAll("[data-view]").forEach(b=> b.textContent = I18N[lang].view);
   });
 }
 
@@ -217,34 +226,91 @@ function setupLangToggle(){
 ============================= */
 let currentStallId = localStorage.getItem("currentStallId") || STALLS[0].id;
 
-// per-stall likes structure: likesByStall[stallId][itemId] = {count, likedByMe}
-let likesByStall = load("likesByStall", {});
-// reviews: [{stallId, rating, comment, date, ts}]
-let reviews = load("reviews", []);
-// complaints: [{stallId, issue, details, priority, contact, status, date, ts}]
-let complaints = load("complaints", []);
-// loyalty (global)
+// Likes: Firestore gives counts; localStorage stores likedByMe
+let likesCountByItem = {}; // { itemId: {count: number} }
+
+// Reviews/Complaints now come from Firestore live
+let reviewsLive = [];
+let complaintsLive = [];
+
+// loyalty (still local demo)
 let loyalty = load("loyalty", { points: 0 });
-// promo state per stall
+
+// promo state per stall (still local demo)
 let promoByStall = load("promoByStall", {}); // {stallId:{subscribed, activePromo}}
-// order tracking (global mock)
-let orderTracking = load("orderTracking", { orderId:"", statusIndex:-1 });
+
+// listeners
+let unsubReviews = null;
+let unsubComplaints = null;
+let unsubLikes = null;
 
 function ensurePromo(stallId){
   if (!promoByStall[stallId]) promoByStall[stallId] = { subscribed:false, activePromo:"" };
 }
-function ensureLikes(stallId){
-  if (!likesByStall[stallId]) likesByStall[stallId] = {};
-}
-function ensureLikeEntry(stallId, itemId){
-  ensureLikes(stallId);
-  if (!likesByStall[stallId][itemId]) likesByStall[stallId][itemId] = { count:0, likedByMe:false };
+
+/* ===== liked-by-me per browser ===== */
+function getLikedKey(stallId, itemId){ return `liked_${stallId}_${itemId}`; }
+function isLikedByMe(stallId, itemId){ return localStorage.getItem(getLikedKey(stallId,itemId)) === "1"; }
+function setLikedByMe(stallId, itemId, liked){ localStorage.setItem(getLikedKey(stallId,itemId), liked ? "1" : "0"); }
+
+/* =============================
+   Firestore binding for selected stall
+============================= */
+function bindStallRealtime(stallId){
+  // stop previous listeners
+  if (unsubReviews) { unsubReviews(); unsubReviews = null; }
+  if (unsubComplaints) { unsubComplaints(); unsubComplaints = null; }
+  if (unsubLikes) { unsubLikes(); unsubLikes = null; }
+
+  // likes
+  unsubLikes = listenMenuLikes(stallId, (map)=>{
+    likesCountByItem = map || {};
+    renderMenu();
+  });
+
+  // reviews
+  unsubReviews = listenReviews(stallId, (list)=>{
+    reviewsLive = Array.isArray(list) ? list : [];
+    renderReviews();
+    // home rating chips (if on home page)
+    refreshHomeCards();
+  });
+
+  // complaints
+  unsubComplaints = listenComplaints(stallId, (list)=>{
+    complaintsLive = Array.isArray(list) ? list : [];
+    renderComplaints();
+  });
 }
 
 /* =============================
    HOME page
 ============================= */
-function initHome(){
+function calcAvgRatingFromLive(stallId){
+  // We only live-listen current stall; home page will show 0 unless user visited a stall.
+  // Simple demo: store last known avg in localStorage cache.
+  const cache = load("avgCache", {});
+  return Number(cache[stallId] || 0);
+}
+
+function updateAvgCacheForCurrentStall(){
+  const cache = load("avgCache", {});
+  const rs = reviewsLive.filter(r => r.stallId === currentStallId);
+  const avg = rs.length ? rs.reduce((s,r)=>s+(Number(r.rating)||0),0)/rs.length : 0;
+  cache[currentStallId] = avg;
+  save("avgCache", cache);
+}
+
+function refreshHomeCards(){
+  // if on home page, rerender ratings
+  const list = qs("stallCards");
+  if (!list) return;
+  // update cache for current stall
+  updateAvgCacheForCurrentStall();
+  initHome(true);
+}
+
+function initHome(force=false){
   const list = qs("stallCards");
   if (!list) return;
 
@@ -260,56 +326,42 @@ function initHome(){
       (s.unit && s.unit.toLowerCase().includes(q))
     );
 
-    filtered.forEach(s => {
-      const avg = calcAvgRating(s.id);
-
+    filtered.forEach(s=>{
+      const avg = calcAvgRatingFromLive(s.id);
       const div = document.createElement("div");
       div.className = "stall-card";
 
       div.innerHTML = `
         <div class="stall-img"></div>
-
-        <div class="stall-info">
+        <div>
           <h3 class="stall-name">${escapeHtml(s.name)}</h3>
-
           <div class="tags">
-            ${s.cuisine.map(c => `<span class="tag">${escapeHtml(c)}</span>`).join("")}
-            <span class="tag">⭐ ${avg.toFixed(1)}</span>
-            <span class="tag">${escapeHtml(s.id)}</span>
+            ${(s.cuisine||[]).map(c=>`<span class="tag">${escapeHtml(c)}</span>`).join("")}
+            <span class="tag">⭐ ${Number(avg).toFixed(1)}</span>
           </div>
-
           <div class="muted small">
-            ${escapeHtml(s.cuisine.join(", "))} • ${escapeHtml(s.unit)}
+            ${escapeHtml((s.cuisine||[]).join(", "))}${s.unit ? ` • ${escapeHtml(s.unit)}` : ""}
           </div>
         </div>
-
-        <button class="btn btn-primary" data-view="${s.id}">
-          ${I18N[lang].view}
-        </button>
+        <button class="btn btn-primary" data-view="${s.id}">${I18N[lang].view}</button>
       `;
-
       list.appendChild(div);
     });
-
-    if (filtered.length === 0) {
-      list.innerHTML = `<div class="muted small">No stalls found.</div>`;
-    }
   };
 
-  if (search) search.addEventListener("input", render);
+  if (!force && search) search.addEventListener("input", render);
 
-  document.addEventListener("click", (e) => {
+  document.addEventListener("click", (e)=>{
     const btn = e.target.closest("[data-view]");
     if (!btn) return;
-
-    currentStallId = btn.getAttribute("data-view");
+    const stallId = btn.getAttribute("data-view");
+    currentStallId = stallId;
     localStorage.setItem("currentStallId", currentStallId);
     window.location.href = "stall.html";
   });
 
   render();
 }
-
 
 /* =============================
    Stall selector + header
@@ -323,28 +375,37 @@ function initStallSelector(){
   STALLS.forEach(s=>{
     const opt = document.createElement("option");
     opt.value = s.id;
-    opt.textContent = s.name;
+    opt.textContent = `${s.name} (${s.id})`;
     if (s.id === currentStallId) opt.selected = true;
     select.appendChild(opt);
   });
 
   const updateName = () => {
     const found = STALLS.find(s=>s.id===currentStallId);
-    nameEl.textContent = found ? found.name : "Selected Stall";
+    nameEl.textContent = found ? `${found.name} • ${found.id}` : "Selected Stall";
   };
   updateName();
+
+  // Bind listeners for current stall
+  bindStallRealtime(currentStallId);
 
   select.addEventListener("change", ()=>{
     currentStallId = select.value;
     localStorage.setItem("currentStallId", currentStallId);
     updateName();
+    bindStallRealtime(currentStallId);
     renderAllStallSections();
   });
 }
 
 /* =============================
-   Menu + Likes
+   Menu + Likes (Firestore count + local likedByMe)
 ============================= */
+function getLikeCount(itemId){
+  const v = likesCountByItem?.[itemId]?.count;
+  return Number.isFinite(v) ? v : 0;
+}
+
 function renderMenu(){
   const list = qs("menuList");
   if (!list) return;
@@ -353,26 +414,25 @@ function renderMenu(){
   list.innerHTML = "";
 
   items.forEach(item=>{
-    ensureLikeEntry(currentStallId, item.id);
-    const entry = likesByStall[currentStallId][item.id];
+    const liked = isLikedByMe(currentStallId, item.id);
+    const count = getLikeCount(item.id);
 
     const div = document.createElement("div");
     div.className = "menu-item";
     div.innerHTML = `
       <div class="menu-left">
         <div class="menu-title">${escapeHtml(item.name)}</div>
-        <div class="menu-meta">${escapeHtml(item.cuisine)} • $${item.price.toFixed(2)}</div>
+        <div class="menu-meta">${escapeHtml(item.cuisine)} • $${Number(item.price).toFixed(2)}</div>
       </div>
 
       <div class="like">
-        <span class="heart ${entry.likedByMe ? "liked":""}" data-like="${item.id}">♥</span>
-        <span class="like-count">${entry.count}</span>
+        <span class="heart ${liked ? "liked":""}" data-like="${item.id}">♥</span>
+        <span class="like-count">${count}</span>
       </div>
     `;
     list.appendChild(div);
   });
 
-  save("likesByStall", likesByStall);
   renderTopLiked();
 }
 
@@ -381,11 +441,8 @@ function renderTopLiked(){
   if (!box) return;
 
   const items = MENU_BY_STALL[currentStallId] || [];
-  ensureLikes(currentStallId);
-  const map = likesByStall[currentStallId];
-
   const ranked = items
-    .map(i=>({name:i.name, id:i.id, count:(map[i.id]?.count||0)}))
+    .map(i=>({name:i.name, id:i.id, count:getLikeCount(i.id)}))
     .sort((a,b)=>b.count-a.count)
     .slice(0,3)
     .filter(x=>x.count>0);
@@ -394,43 +451,50 @@ function renderTopLiked(){
 }
 
 function initLikesClick(){
-  document.addEventListener("click",(e)=>{
+  document.addEventListener("click", async (e)=>{
     const t = e.target.closest("[data-like]");
     if (!t) return;
-    const itemId = t.getAttribute("data-like");
-    ensureLikeEntry(currentStallId, itemId);
 
-    const entry = likesByStall[currentStallId][itemId];
-    // toggle like
-    if (entry.likedByMe) {
-      entry.likedByMe = false;
-      entry.count = Math.max(0, entry.count - 1);
-    } else {
-      entry.likedByMe = true;
-      entry.count += 1;
+    const itemId = t.getAttribute("data-like");
+
+    const currentlyLiked = isLikedByMe(currentStallId, itemId);
+    const nextLiked = !currentlyLiked;
+
+    // Update local "liked by me" first (fast UI)
+    setLikedByMe(currentStallId, itemId, nextLiked);
+
+    // Update Firestore count
+    try{
+      await toggleLikeCount(currentStallId, itemId, nextLiked);
+    }catch(err){
+      console.warn("Like update failed:", err);
+      // rollback if fails
+      setLikedByMe(currentStallId, itemId, currentlyLiked);
+      alert("Like failed (Firestore rules/network).");
     }
 
-    save("likesByStall", likesByStall);
     renderMenu();
   });
 
   const resetBtn = qs("resetLikesBtn");
   if (resetBtn){
     resetBtn.addEventListener("click", ()=>{
-      likesByStall[currentStallId] = {};
-      save("likesByStall", likesByStall);
+      // Only reset likedByMe flags locally (counts stay in Firestore)
+      const items = MENU_BY_STALL[currentStallId] || [];
+      items.forEach(i=> localStorage.removeItem(getLikedKey(currentStallId, i.id)));
       renderMenu();
     });
   }
 }
 
 /* =============================
-   Reviews
+   Reviews (Firestore)
 ============================= */
 function calcAvgRating(stallId){
-  const rs = reviews.filter(r=>r.stallId===stallId);
+  // On stall page, use live reviews
+  const rs = reviewsLive.filter(r=>r.stallId===stallId);
   if (rs.length===0) return 0;
-  const total = rs.reduce((s,r)=>s+r.rating,0);
+  const total = rs.reduce((s,r)=>s+(Number(r.rating)||0),0);
   return total/rs.length;
 }
 
@@ -442,17 +506,17 @@ function renderReviews(){
   const countEl = qs("reviewCount");
   const sort = qs("sortReviews");
 
-  const rs = reviews.filter(r=>r.stallId===currentStallId);
-  const avg = rs.length ? (rs.reduce((s,r)=>s+r.rating,0)/rs.length) : 0;
+  const rs = reviewsLive.filter(r=>r.stallId===currentStallId);
+  const avg = rs.length ? (rs.reduce((s,r)=>s+(Number(r.rating)||0),0)/rs.length) : 0;
 
   if (avgEl) avgEl.textContent = `⭐ ${avg.toFixed(1)}`;
   if (countEl) countEl.textContent = `${rs.length} reviews`;
 
   const mode = sort ? sort.value : "latest";
   const sorted = [...rs].sort((a,b)=>{
-    if (mode==="highest") return b.rating-a.rating;
-    if (mode==="lowest") return a.rating-b.rating;
-    return (b.ts||0)-(a.ts||0);
+    if (mode==="highest") return (Number(b.rating)||0)-(Number(a.rating)||0);
+    if (mode==="lowest") return (Number(a.rating)||0)-(Number(b.rating)||0);
+    return (Number(b.tsMs)||0)-(Number(a.tsMs)||0);
   });
 
   list.innerHTML = "";
@@ -466,13 +530,15 @@ function renderReviews(){
     div.className = "review-card";
     div.innerHTML = `
       <div class="review-top">
-        <div class="review-stars">⭐ ${r.rating}</div>
-        <div class="muted small">${escapeHtml(r.date)}</div>
+        <div class="review-stars">⭐ ${escapeHtml(r.rating)}</div>
+        <div class="muted small">${escapeHtml(r.date || nowText())}</div>
       </div>
-      <div class="review-text">${escapeHtml(r.comment)}</div>
+      <div class="review-text">${escapeHtml(r.comment || "")}</div>
     `;
     list.appendChild(div);
   });
+
+  updateAvgCacheForCurrentStall();
 }
 
 function initReviewForm(){
@@ -484,10 +550,10 @@ function initReviewForm(){
   const sort = qs("sortReviews");
   const clearBtn = qs("clearReviewsBtn");
 
-  form.addEventListener("submit",(e)=>{
+  form.addEventListener("submit", async (e)=>{
     e.preventDefault();
     const rating = Number(ratingInput.value);
-    const comment = commentInput.value.trim();
+    const comment = (commentInput.value || "").trim();
 
     if (!Number.isFinite(rating) || rating<1 || rating>5){
       alert("Rating must be 1 to 5.");
@@ -498,27 +564,29 @@ function initReviewForm(){
       return;
     }
 
-    reviews.push({ stallId:currentStallId, rating, comment, date:nowText(), ts:Date.now() });
-    save("reviews", reviews);
-
-    ratingInput.value = "";
-    commentInput.value = "";
-    renderReviews();
+    try{
+      await addReview(currentStallId, { rating, comment });
+      ratingInput.value = "";
+      commentInput.value = "";
+    }catch(err){
+      console.warn("Review add failed:", err);
+      alert("Review failed (Firestore rules/network).");
+    }
   });
 
   if (sort) sort.addEventListener("change", renderReviews);
 
+  // NOTE: clearing reviews in Firestore is not implemented (dangerous for group demo).
+  // Keep button but show message.
   if (clearBtn){
     clearBtn.addEventListener("click", ()=>{
-      reviews = reviews.filter(r=>r.stallId!==currentStallId);
-      save("reviews", reviews);
-      renderReviews();
+      alert("Demo note: Clearing reviews is disabled for Firestore safety.");
     });
   }
 }
 
 /* =============================
-   Promo (per stall)
+   Promo (still local demo)
 ============================= */
 function renderPromo(){
   const banner = qs("promoBanner");
@@ -561,7 +629,7 @@ function initPromo(){
 }
 
 /* =============================
-   Loyalty
+   Loyalty (still local demo)
 ============================= */
 function renderLoyalty(msg="", ok=true){
   const pointsEl = qs("pointsText");
@@ -602,7 +670,7 @@ function initLoyalty(){
 }
 
 /* =============================
-   Complaints
+   Complaints (Firestore)
 ============================= */
 function renderComplaints(){
   const listEl = qs("complaintsList");
@@ -610,13 +678,12 @@ function renderComplaints(){
 
   const filterValue = qs("filterStatus")?.value || "all";
 
-  // complaints for selected stall (latest first)
-  let list = complaints
+  let list = complaintsLive
     .filter(c => c.stallId === currentStallId)
     .slice()
-    .sort((a, b) => (b.ts || 0) - (a.ts || 0));
+    .sort((a, b) => (Number(b.tsMs)||0) - (Number(a.tsMs)||0));
 
-  // Stats (only exists on report page)
+  // Stats (report page)
   const totalEl = qs("totalReports");
   const openEl = qs("openReports");
   const resolvedEl = qs("resolvedReports");
@@ -631,12 +698,10 @@ function renderComplaints(){
     resolvedEl.textContent = String(resolved);
   }
 
-  // Filter dropdown
   if (filterValue !== "all") {
     list = list.filter(x => x.status === filterValue);
   }
 
-  // Render history list
   listEl.innerHTML = "";
 
   if (list.length === 0) {
@@ -653,13 +718,13 @@ function renderComplaints(){
     div.innerHTML = `
       <div class="review-top">
         <div>
-          <strong>${escapeHtml(c.issue)}</strong>
-          <span class="status ${cls}">${escapeHtml(c.status)}</span>
+          <strong>${escapeHtml(c.issue || "")}</strong>
+          <span class="status ${cls}">${escapeHtml(c.status || "Submitted")}</span>
           <span class="tag">Priority: ${escapeHtml(c.priority || "Low")}</span>
         </div>
-        <div class="muted small">${escapeHtml(c.date)}</div>
+        <div class="muted small">${escapeHtml(c.date || nowText())}</div>
       </div>
-      <div class="review-text">${escapeHtml(c.details)}</div>
+      <div class="review-text">${escapeHtml(c.details || "")}</div>
       ${c.contact ? `<div class="muted small">Contact: ${escapeHtml(c.contact)}</div>` : ""}
     `;
     listEl.appendChild(div);
@@ -672,16 +737,14 @@ function initComplaintForm(){
 
   const issue = qs("issueSelect");
   const details = qs("complaintInput");
-
-  // optional fields (improved report page)
   const prioritySelect = qs("prioritySelect");
   const contactInput = qs("contactInput");
 
-  form.addEventListener("submit", (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const i = issue.value;
-    const d = details.value.trim();
+    const d = (details.value || "").trim();
 
     const priority = prioritySelect ? prioritySelect.value : "Low";
     const contact = contactInput ? contactInput.value.trim() : "";
@@ -689,52 +752,44 @@ function initComplaintForm(){
     if (!i) { alert("Please select issue type."); return; }
     if (!d) { alert("Please enter complaint details."); return; }
 
-    complaints.push({
-      stallId: currentStallId,
-      issue: i,
-      details: d,
-      priority,
-      contact,
-      status: "Submitted",
-      date: nowText(),
-      ts: Date.now()
-    });
+    try{
+      await addComplaint(currentStallId, {
+        issue: i,
+        details: d,
+        priority,
+        contact,
+        status: "Submitted"
+      });
 
-    save("complaints", complaints);
-
-    // reset form inputs
-    issue.value = "";
-    details.value = "";
-    if (prioritySelect) prioritySelect.value = "Low";
-    if (contactInput) contactInput.value = "";
-
-    renderComplaints();
+      issue.value = "";
+      details.value = "";
+      if (prioritySelect) prioritySelect.value = "Low";
+      if (contactInput) contactInput.value = "";
+    }catch(err){
+      console.warn("Complaint add failed:", err);
+      alert("Complaint failed (Firestore rules/network).");
+    }
   });
 
-  // Clear complaints for this stall
   const clearBtn = qs("clearComplaintsBtn");
   if (clearBtn) {
     clearBtn.addEventListener("click", () => {
-      complaints = complaints.filter(c => c.stallId !== currentStallId);
-      save("complaints", complaints);
-      renderComplaints();
+      alert("Demo note: Clearing complaints is disabled for Firestore safety.");
     });
   }
 
-  // Filter dropdown
   const filter = qs("filterStatus");
   if (filter) {
     filter.addEventListener("change", renderComplaints);
   }
 
-  // Mark Latest as Resolved
   const markBtn = qs("markResolvedBtn");
   if (markBtn) {
-    markBtn.addEventListener("click", () => {
-      const list = complaints
+    markBtn.addEventListener("click", async () => {
+      const list = complaintsLive
         .filter(c => c.stallId === currentStallId)
         .slice()
-        .sort((a, b) => (b.ts || 0) - (a.ts || 0));
+        .sort((a, b) => (Number(b.tsMs)||0) - (Number(a.tsMs)||0));
 
       if (list.length === 0) {
         alert("No complaints to update.");
@@ -742,70 +797,19 @@ function initComplaintForm(){
       }
 
       const latest = list[0];
+      if (!latest.id) {
+        alert("Cannot resolve (missing doc id).");
+        return;
+      }
 
-      const idx = complaints.findIndex(
-        c => c.stallId === latest.stallId && c.ts === latest.ts
-      );
-
-      if (idx !== -1) {
-        complaints[idx].status = "Resolved";
-        save("complaints", complaints);
-        renderComplaints();
+      try{
+        await markComplaintResolved(currentStallId, latest.id);
+      }catch(err){
+        console.warn("Resolve failed:", err);
+        alert("Resolve failed (Firestore rules/network).");
       }
     });
   }
-}
-
-/* =============================
-   Order Tracking (separate page)
-============================= */
-function renderTracking(){
-  const idEl = qs("orderId");
-  const statusEl = qs("orderStatus");
-  if (!idEl || !statusEl) return;
-
-  idEl.textContent = orderTracking.orderId || "—";
-  statusEl.textContent = statusName(orderTracking.statusIndex);
-
-  ["step0","step1","step2"].forEach((id,idx)=>{
-    const el = qs(id);
-    if (!el) return;
-    el.classList.toggle("active", orderTracking.statusIndex >= idx && orderTracking.statusIndex !== -1);
-  });
-}
-
-function statusName(idx){
-  if (idx===0) return "Preparing";
-  if (idx===1) return "Ready";
-  if (idx===2) return "Completed";
-  return "—";
-}
-
-function initTracking(){
-  const newBtn = qs("newOrderBtn");
-  const advBtn = qs("advanceStatusBtn");
-  const resetBtn = qs("resetOrderBtn");
-  if (!newBtn || !advBtn || !resetBtn) return;
-
-  newBtn.addEventListener("click", ()=>{
-    orderTracking.orderId = "ORD-" + Math.floor(1000 + Math.random()*9000);
-    orderTracking.statusIndex = 0;
-    save("orderTracking", orderTracking);
-    renderTracking();
-  });
-
-  advBtn.addEventListener("click", ()=>{
-    if (!orderTracking.orderId){ alert("Create a new order first."); return; }
-    orderTracking.statusIndex = Math.min(2, orderTracking.statusIndex + 1);
-    save("orderTracking", orderTracking);
-    renderTracking();
-  });
-
-  resetBtn.addEventListener("click", ()=>{
-    orderTracking = { orderId:"", statusIndex:-1 };
-    save("orderTracking", orderTracking);
-    renderTracking();
-  });
 }
 
 /* =============================
@@ -822,7 +826,6 @@ function renderAllStallSections(){
    Init per page
 ============================= */
 document.addEventListener("DOMContentLoaded", ()=>{
-  // topbar
   applyLang();
   setupLangToggle();
 
@@ -835,28 +838,13 @@ document.addEventListener("DOMContentLoaded", ()=>{
   initReviewForm();
   initPromo();
   initLoyalty();
+
   renderMenu();
   renderReviews();
   renderPromo();
   renderLoyalty();
-  
+
   // report page
   initComplaintForm();
   renderComplaints();
-
-  // tracking page
-  initTracking();
-  renderTracking();
-
-  // update home view labels after language toggle (simple refresh)
-  const langBtn = qs("langToggle");
-  if (langBtn){
-    langBtn.addEventListener("click", ()=>{
-      // quick refresh for view buttons text
-      const viewBtns = document.querySelectorAll("[data-view]");
-      viewBtns.forEach(b=>b.textContent = I18N[lang].view);
-      const homeTitle = qs("homeTitle");
-      if (homeTitle) homeTitle.textContent = I18N[lang].homeTitle;
-    });
-  }
 });

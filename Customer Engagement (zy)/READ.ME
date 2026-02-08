@@ -1,10 +1,81 @@
-1. Translation bar on top can translate the whole page to chinese or english
-2. tracking features, after placing an order, you can track the order status
-you can choose to go to the tracking page or press 'not now' which will redirect you to the main page.
-for the order status, it can be control in the vendor queue system page .
-3. The likes for menu item feature allow uses to like and see their top liked item
-4. The rating and comment allow user to rate, it will affect the stall's overall rating which can be viewed in the stall main page or on top of the stall detail page.
-5. The report feature allow users to report and leave some comments.The lastest and report history can be view below.
-6.
-7
-8
+1. Home Page (Stall Directory + Search)
+- Displays a list of stalls (name, cuisine, unit number).
+- Search bar supports searching by:
+  - stall name
+  - stall ID
+  - unit number (e.g. `#01-12`)
+- “View” button saves the selected stall and navigates to the Stall Detail page.
+
+2. Stall Detail Page (Menu + Likes + Top Liked)
+- Shows menu items for the selected stall (name, cuisine, price).
+- Customers can “♥ Like” menu items.
+- Like counts are tracked per stall and stored so they persist.
+- “Top Liked Items” automatically shows the most-liked items (ranked).
+
+3. Feedback / Reviews
+- Customers can submit:
+  - rating (1–5)
+  - comment text
+- Reviews are displayed in a list with date/time.
+- Review list can be sorted (latest / highest / lowest).
+- Average rating per stall is calculated and shown.
+
+4. Report / Complaint Page (Customer Support)
+- Customers can submit a complaint linked to a stall:
+  - issue type
+  - priority (Low/Medium/High)
+  - contact (optional)
+  - complaint details
+- Complaint records include status (Submitted / Resolved).
+- Report History section:
+  - shows all reports for that stall
+  - filter by status (All / Submitted / Resolved)
+  - statistics counters: Total / Open / Resolved
+- “Mark Latest as Resolved” (demo function) updates the most recent complaint to Resolved.
+
+---
+
+5. Promotions (Per Stall)
+- Customers can subscribe/unsubscribe to promotions per stall.
+- Vendor/admin can set an “active promo” message.
+- Promo banner only shows if a promo exists.
+
+
+6. Loyalty Points (Rewards)
+- Points are tracked for the user.
+- Earn points (demo): +10 points
+- Redeem points (demo): -50 points (only if enough points)
+
+7. Payment → Track Order Choice
+- After payment succeeds, customer is given 2 options:
+  - Track Order
+  - Not Now (returns to main page, e.g. `main.html`)
+- This prevents forced navigation into tracking if the user doesn’t want to track.
+
+8. Order Tracking (Timeline UI)
+- Displays:
+  - order number / ID
+  - current status text
+  - timeline steps (Preparing → Ready → Completed)
+- Status can update in real-time based on Firestore updates.
+- Supports loading an order by:
+  - tracking.html?orderId=ORD-1234
+  - last saved order ID in localStorage
+
+
+
+Firebase / Firestore Integration
+
+What Firebase is used for
+- Firestore Database stores application data so it is:
+  - shared across team members’ features (create order, vendor queue, tracking)
+  - real-time synced (tracking updates immediately when vendor updates status)
+
+Collections (example structure)
+- orders/{orderId}
+  - orderId, statusIndex, statusText, items, totals, createdAt, updatedAt, etc.
+- stalls/{stallId}
+  - stall info and optional nested items subcollection
+- (Planned / Optional) reviews, complaints, likes, promos, loyalty
+
+ 

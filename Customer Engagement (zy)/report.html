@@ -1,117 +1,133 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Report Issue</title>
+  <title>Report Page</title>
   <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
+
+  <!-- Topbar -->
   <header class="topbar">
     <div class="brand">
       <span class="logo">🍜</span>
       <span class="appname" data-i18n="appTitle">Hawker Hub</span>
     </div>
     <div class="top-actions">
-      <a class="btn btn-ghost" href="stall.html">← <span data-i18n="backStall">Stall</span></a>
       <button id="langToggle" class="btn btn-ghost" type="button">EN / 中文</button>
+      <a class="btn btn-outline" href="home.html" data-i18n="homeTitle">Home</a>
+      <a class="btn btn-outline" href="stall.html" data-i18n="stallDetail">Stall Detail</a>
     </div>
   </header>
 
   <main class="container">
-    <div class="grid-2">
-      <!-- LEFT: SUBMIT REPORT -->
-      <section class="card">
-        <div class="section-title">
-          <div>
-            <h2 style="margin:0;" data-i18n="reportPageTitle">Report Page</h2>
-            <div class="muted small" data-i18n="reportPageSubtitle">
-              Submit a complaint linked to the selected stall.
-            </div>
-          </div>
-          <button id="clearComplaintsBtn" class="btn btn-ghost" type="button" data-i18n="clearBtn">Clear</button>
-        </div>
+    <section class="card">
 
-        <form id="complaintForm" class="form">
-          <div class="form-row">
-            <label for="issueSelect" data-i18n="issueType">Issue Type</label>
-            <select id="issueSelect" required>
+      <!-- Page title -->
+      <div class="section-title">
+        <h2 data-i18n="reportPageTitle">Report Page</h2>
+        <div class="muted small" data-i18n="reportPageSubtitle">Submit a complaint linked to the selected stall.</div>
+      </div>
+
+      <!-- ✅ Stall dropdown + selected stall name -->
+      <div style="margin-top:14px;">
+        <div class="muted small" data-i18n="backStall">Stall</div>
+        <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:8px;">
+          <select id="stallSelect" class="input" style="min-width:260px;"></select>
+          <div id="stallName" style="font-weight:800;"></div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Complaint form -->
+      <form id="complaintForm">
+        <div class="grid-2" style="gap:12px;">
+          <div>
+            <div class="muted small" style="margin-bottom:6px;" data-i18n="issueType">Issue Type</div>
+            <select id="issueSelect" class="input">
               <option value="" data-i18n="selectIssue">Select issue</option>
-              <option value="Poor Service">Poor Service</option>
-              <option value="Hygiene Issue">Hygiene Issue</option>
               <option value="Food Quality">Food Quality</option>
-              <option value="Overcharging">Overcharging</option>
-              <option value="Other">Other</option>
+              <option value="Hygiene">Hygiene</option>
+              <option value="Long Waiting Time">Long Waiting Time</option>
+              <option value="Wrong Order">Wrong Order</option>
+              <option value="Service Attitude">Service Attitude</option>
+              <option value="Others">Others</option>
             </select>
           </div>
 
-          <div class="form-row">
-            <label for="prioritySelect" data-i18n="priority">Priority</label>
-            <select id="prioritySelect" required>
+          <div>
+            <div class="muted small" style="margin-bottom:6px;" data-i18n="priority">Priority</div>
+            <select id="prioritySelect" class="input">
               <option value="Low" data-i18n="priorityLow">Low</option>
               <option value="Medium" data-i18n="priorityMed">Medium</option>
               <option value="High" data-i18n="priorityHigh">High</option>
             </select>
           </div>
-
-          <div class="form-row">
-            <label for="contactInput" data-i18n="contactOptional">Contact (Optional)</label>
-            <input id="contactInput" type="text" data-i18n-ph="contactPH" placeholder="e.g. email / phone"/>
-          </div>
-
-          <div class="form-row">
-            <label for="complaintInput" data-i18n="details">Complaint Details</label>
-            <textarea id="complaintInput" required data-i18n-ph="detailsPH" placeholder="Describe your issue..."></textarea>
-          </div>
-
-          <div class="footer-actions">
-            <button class="btn btn-primary" type="submit" data-i18n="submitComplaint">Submit Complaint</button>
-          </div>
-        </form>
-
-        <div class="divider"></div>
-
-        <div class="row">
-          <span class="pill"><span data-i18n="totalReports">Total Reports</span>: <strong id="totalReports">0</strong></span>
-          <span class="pill"><span data-i18n="openReports">Open</span>: <strong id="openReports">0</strong></span>
-          <span class="pill"><span data-i18n="resolvedReports">Resolved</span>: <strong id="resolvedReports">0</strong></span>
         </div>
-      </section>
 
-      <!-- RIGHT: HISTORY -->
-      <section class="card">
-        <div class="section-title">
-          <div>
-            <h2 style="margin:0;" data-i18n="myReportHistory">My Report History</h2>
-            <div class="muted small" data-i18n="historySubtitle">
-              View your past reports for this stall.
-            </div>
-          </div>
+        <div style="margin-top:12px;">
+          <div class="muted small" style="margin-bottom:6px;" data-i18n="contactOptional">Contact (Optional)</div>
+          <input id="contactInput" class="input" type="text" data-i18n-ph="contactPH" placeholder="e.g. email / phone"/>
+        </div>
 
-          <select id="filterStatus" style="max-width:220px;">
-            <option value="all" data-i18n="filterAll">Filter: All</option>
-            <option value="Submitted" data-i18n="filterSubmitted">Submitted</option>
-            <option value="Resolved" data-i18n="filterResolved">Resolved</option>
+        <div style="margin-top:12px;">
+          <div class="muted small" style="margin-bottom:6px;" data-i18n="details">Complaint Details</div>
+          <textarea id="complaintInput" class="input" rows="6" data-i18n-ph="detailsPH" placeholder="Describe your issue..."></textarea>
+        </div>
+
+        <div style="margin-top:14px; display:flex; gap:12px; flex-wrap:wrap;">
+          <button class="btn btn-primary" type="submit" data-i18n="submitComplaint">Submit Complaint</button>
+          <button id="clearComplaintsBtn" class="btn btn-ghost" type="button" data-i18n="clearBtn">Clear</button>
+        </div>
+      </form>
+
+      <div class="divider"></div>
+
+      <!-- Stats -->
+      <div class="row" style="gap:18px; flex-wrap:wrap;">
+        <div><strong data-i18n="totalReports">Total Reports</strong>: <span id="totalReports">0</span></div>
+        <div><strong data-i18n="openReports">Open</strong>: <span id="openReports">0</span></div>
+        <div><strong data-i18n="resolvedReports">Resolved</strong>: <span id="resolvedReports">0</span></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- History header + filter -->
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+        <div>
+          <h3 style="margin:0;" data-i18n="myReportHistory">My Report History</h3>
+          <div class="muted small" data-i18n="historySubtitle">View your past reports for this stall.</div>
+        </div>
+
+        <div style="min-width:220px;">
+          <div class="muted small" style="margin-bottom:6px;" data-i18n="filterAll">Filter: All</div>
+          <select id="filterStatus" class="input">
+            <option value="all">All</option>
+            <option value="Submitted">Submitted</option>
+            <option value="Resolved">Resolved</option>
           </select>
         </div>
+      </div>
 
-        <div id="complaintsList" class="list"></div>
+      <div style="margin-top:12px;">
+        <div id="complaintsList"></div>
+      </div>
 
-        <div class="divider"></div>
+      <div class="divider"></div>
 
-        <div class="row" style="justify-content:flex-end;">
-          <button id="markResolvedBtn" class="btn btn-outline" type="button" data-i18n="markResolved">
-            Mark Latest as Resolved
-          </button>
-        </div>
+      <button id="markResolvedBtn" class="btn btn-outline" type="button" data-i18n="markResolved">
+        Mark Latest as Resolved
+      </button>
+      <div class="muted small" style="margin-top:10px;" data-i18n="historyNote">
+        (For demo) This button marks your most recent complaint as “Resolved”.
+      </div>
 
-        <p class="muted small" data-i18n="historyNote">
-          (For demo) This button marks your most recent complaint as “Resolved”.
-        </p>
-      </section>
-    </div>
+    </section>
   </main>
 
-  <script src="app.js"></script>
+  <!-- ✅ IMPORTANT: app.js must be module because it imports firebase files -->
+  <script type="module" src="app.js"></script>
 </body>
 </html>

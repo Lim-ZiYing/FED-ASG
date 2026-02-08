@@ -1,188 +1,249 @@
+// tracking firebase.js (FULL UPDATED)
+// Works with:
+// - orders created by .add() (random doc id) but has field orderId
+// - orders updated by other teammates (statusText OR statusIndex)
+// - tracking by URL ?orderId=ORD-1234 OR localStorage lastOrderId/orderTracking
+
 import { db } from "./firebase.js";
+
 import {
+  collection,
+  query,
+  where,
+  getDocs,
   doc,
-  setDoc,
   getDoc,
   onSnapshot,
-  serverTimestamp
+  serverTimestamp,
+  setDoc,
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const qs = (id) => document.getElementById(id);
 
-const statusName = (i) => {
-  if (i === 0) return "Preparing";
-  if (i === 1) return "Ready";
-  if (i === 2) return "Completed";
-  return "—";
-};
+const LS_LAST_ORDER_ID = "lastOrderId";      // from payment page
+const LS_TRACKING = "orderTracking";         // your older local tracking object
 
-const loadLocal = () => {
-  try {
-    return JSON.parse(localStorage.getItem("orderTracking")) || { orderId: "", statusIndex: -1 };
-  } catch {
-    return { orderId: "", statusIndex: -1 };
-  }
-};
-
-const saveLocal = (v) => localStorage.setItem("orderTracking", JSON.stringify(v));
-
-const setBackendMsg = (txt) => {
-  const el = qs("backendMsg");
-  if (el) el.textContent = txt;
-};
-
-let currentOrder = loadLocal();
 let unsub = null;
+let orderDocId = null;
+let currentOrderId = null;
 
-// 1) If URL has ?orderId=ORD-1234, use that
-const urlParams = new URLSearchParams(window.location.search);
-const urlOrderId = urlParams.get("orderId");
+// ------------------------------
+// Status mapping
+// ------------------------------
+function statusToIndex(statusText) {
+  const s = String(statusText || "").toLowerCase().trim();
 
-// 2) If create order saved lastOrderId, use that
-const lastOrderId = localStorage.getItem("lastOrderId");
+  // Treat "paid/received" as first stage (Preparing)
+  if (
+    s === "paid" ||
+    s === "received" ||
+    s === "new" ||
+    s === "created" ||
+    s === "preparing"
+  ) return 0;
 
-// pick best orderId source
-if (urlOrderId) {
-  currentOrder.orderId = urlOrderId;
-  if (currentOrder.statusIndex === -1) currentOrder.statusIndex = 0;
-  saveLocal(currentOrder);
-} else if (!currentOrder.orderId && lastOrderId) {
-  currentOrder.orderId = lastOrderId;
-  if (currentOrder.statusIndex === -1) currentOrder.statusIndex = 0;
-  saveLocal(currentOrder);
+  if (s === "ready") return 1;
+  if (s === "completed" || s === "complete" || s === "done") return 2;
+
+  return -1;
 }
 
-function render() {
-  qs("orderId").textContent = currentOrder.orderId || "—";
-  qs("orderStatus").textContent = statusName(currentOrder.statusIndex);
+function indexToStatus(idx) {
+  if (idx === 0) return "Preparing";
+  if (idx === 1) return "Ready";
+  if (idx === 2) return "Completed";
+  return "—";
+}
 
-  ["step0", "step1", "step2"].forEach((id, idx) => {
-    const el = qs(id);
+// ------------------------------
+// UI render
+// ------------------------------
+function render(orderId, idx) {
+  const idEl = qs("orderId");
+  const statusEl = qs("orderStatus");
+
+  if (idEl) idEl.textContent = orderId || "—";
+  if (statusEl) statusEl.textContent = indexToStatus(idx);
+
+  ["step0", "step1", "step2"].forEach((stepId, stepIdx) => {
+    const el = qs(stepId);
     if (!el) return;
-    el.classList.toggle("active", currentOrder.statusIndex >= idx && currentOrder.statusIndex !== -1);
+    el.classList.toggle("active", idx >= stepIdx && idx !== -1);
   });
 }
 
-async function writeOrderToFirestore() {
-  if (!currentOrder.orderId) return;
+// ------------------------------
+// Helpers to pick orderId
+// ------------------------------
+function getOrderIdFromUrl() {
+  const u = new URL(window.location.href);
+  const id = u.searchParams.get("orderId");
+  return id ? id.trim() : "";
+}
 
-  // IMPORTANT: doc ID = orderId, so everyone can find it easily
-  const ref = doc(db, "orders", currentOrder.orderId);
+function getOrderIdFromLocalStorage() {
+  // 1) newest standard: lastOrderId set by payment
+  const last = localStorage.getItem(LS_LAST_ORDER_ID);
+  if (last && last.trim()) return last.trim();
+
+  // 2) older tracking object
+  try {
+    const t = JSON.parse(localStorage.getItem(LS_TRACKING));
+    if (t && t.orderId) return String(t.orderId).trim();
+  } catch {}
+
+  return "";
+}
+
+// ------------------------------
+// Find the Firestore doc that matches orderId
+// (because create-order uses .add() so docId is random)
+// ------------------------------
+async function findOrderDocIdByOrderId(orderId) {
+  // query orders where orderId == "ORD-xxxx"
+  const q = query(collection(db, "orders"), where("orderId", "==", orderId));
+  const snap = await getDocs(q);
+
+  if (snap.empty) return null;
+
+  // If multiple (shouldn't happen), take the first
+  return snap.docs[0].id;
+}
+
+// ------------------------------
+// Listen to order changes (live)
+// ------------------------------
+function startListening(docId, orderId) {
+  if (unsub) unsub();
+  unsub = null;
+
+  const ref = doc(db, "orders", docId);
+
+  unsub = onSnapshot(ref, (snap) => {
+    if (!snap.exists()) {
+      render(orderId, -1);
+      return;
+    }
+
+    const d = snap.data() || {};
+
+    // Prefer numeric statusIndex if present
+    let idx =
+      typeof d.statusIndex === "number"
+        ? d.statusIndex
+        : statusToIndex(d.statusText || d.status || d.state);
+
+    // If still unknown, keep -1
+    if (![0, 1, 2].includes(idx)) idx = -1;
+
+    // Show ID from doc field if exists
+    const showId = d.orderId || orderId;
+
+    render(showId, idx);
+  });
+}
+
+// ------------------------------
+// Buttons (optional demo buttons)
+// If your tracking page has these buttons, it will still work.
+// If you don’t have them, it won’t crash.
+// ------------------------------
+async function safeUpdateStatus(idx) {
+  if (!orderDocId) return alert("Order not found in Firestore yet.");
+  if (!currentOrderId) return alert("No orderId loaded.");
+
+  const ref = doc(db, "orders", orderDocId);
 
   await setDoc(
     ref,
     {
-      orderId: currentOrder.orderId,
-      statusIndex: currentOrder.statusIndex,
-      statusText: statusName(currentOrder.statusIndex),
+      orderId: currentOrderId,
+      statusIndex: idx,
+      statusText: indexToStatus(idx),
       updatedAt: serverTimestamp(),
-      // only set createdAt if doc is new
-      createdAt: serverTimestamp()
     },
     { merge: true }
   );
 }
 
-function listenToOrder(orderId) {
-  if (unsub) unsub();
-  const ref = doc(db, "orders", orderId);
+function setupButtons() {
+  const btnNew = qs("newOrderBtn");
+  const btnAdv = qs("advanceStatusBtn");
+  const btnReset = qs("resetOrderBtn");
 
-  unsub = onSnapshot(
-    ref,
-    (snap) => {
-      if (!snap.exists()) return;
-      const d = snap.data();
+  // If your HTML doesn’t have these, ignore
+  if (btnNew) {
+    btnNew.addEventListener("click", () => {
+      alert(
+        "For your real flow: orders should be created from the Payment/Create Order page.\nTracking page should only DISPLAY progress."
+      );
+    });
+  }
 
-      currentOrder = {
-        orderId: d.orderId || orderId,
-        statusIndex: typeof d.statusIndex === "number" ? d.statusIndex : -1
-      };
+  if (btnAdv) {
+    btnAdv.addEventListener("click", async () => {
+      // read current UI status and advance
+      const currentText = qs("orderStatus")?.textContent || "—";
+      let idx = statusToIndex(currentText);
+      if (idx === -1) idx = 0;
+      idx = Math.min(2, idx + 1);
+      await safeUpdateStatus(idx);
+    });
+  }
 
-      saveLocal(currentOrder);
-      render();
-      setBackendMsg("Backend: Firebase Firestore connected ✅");
-    },
-    (err) => {
-      console.warn(err);
-      setBackendMsg("Backend: Firestore blocked by rules/network ⚠️");
-    }
-  );
+  if (btnReset) {
+    btnReset.addEventListener("click", () => {
+      // local-only reset
+      localStorage.removeItem(LS_LAST_ORDER_ID);
+      try {
+        localStorage.setItem(LS_TRACKING, JSON.stringify({ orderId: "", statusIndex: -1 }));
+      } catch {}
+      render("—", -1);
+
+      if (unsub) unsub();
+      unsub = null;
+      orderDocId = null;
+      currentOrderId = null;
+    });
+  }
 }
 
-// ---- init
-render();
+// ------------------------------
+// Init
+// ------------------------------
+async function init() {
+  setupButtons();
 
-(async () => {
+  // 1) pick orderId from URL first
+  const urlOrderId = getOrderIdFromUrl();
+  const localOrderId = getOrderIdFromLocalStorage();
+
+  currentOrderId = urlOrderId || localOrderId;
+
+  if (!currentOrderId) {
+    render("—", -1);
+    return;
+  }
+
+  // Save for convenience (so you can open tracking page directly later)
+  localStorage.setItem(LS_LAST_ORDER_ID, currentOrderId);
+
+  // 2) find docId by orderId
   try {
-    // If we already have an orderId, try to load it and listen
-    if (currentOrder.orderId) {
-      const ref = doc(db, "orders", currentOrder.orderId);
-      const snap = await getDoc(ref);
+    orderDocId = await findOrderDocIdByOrderId(currentOrderId);
 
-      if (snap.exists()) {
-        const d = snap.data();
-        currentOrder.statusIndex =
-          typeof d.statusIndex === "number" ? d.statusIndex : currentOrder.statusIndex;
-        saveLocal(currentOrder);
-        render();
-      } else {
-        // if doc doesn't exist, create a starter doc
-        await writeOrderToFirestore();
-      }
-
-      listenToOrder(currentOrder.orderId);
-    } else {
-      setBackendMsg("Backend: connected ✅ (no order selected yet)");
+    if (!orderDocId) {
+      // Not found yet — maybe Firestore write failed or rules blocked
+      render(currentOrderId, -1);
+      return;
     }
+
+    // 3) live listen
+    startListening(orderDocId, currentOrderId);
   } catch (e) {
-    console.warn(e);
-    setBackendMsg("Backend: Firestore error ⚠️");
+    console.warn("Tracking init failed:", e);
+    render(currentOrderId, -1);
   }
-})();
+}
 
-// ---- buttons
-qs("newOrderBtn").addEventListener("click", async () => {
-  // demo create (your real create-order page should do this instead)
-  currentOrder = {
-    orderId: "ORD-" + Math.floor(1000 + Math.random() * 9000),
-    statusIndex: 0
-  };
-
-  localStorage.setItem("lastOrderId", currentOrder.orderId);
-  saveLocal(currentOrder);
-  render();
-
-  try {
-    await writeOrderToFirestore();
-    listenToOrder(currentOrder.orderId);
-  } catch (e) {
-    console.warn(e);
-    setBackendMsg("Backend: Firestore write blocked ⚠️");
-  }
-});
-
-qs("advanceStatusBtn").addEventListener("click", async () => {
-  if (!currentOrder.orderId) return alert("No order selected.");
-
-  currentOrder.statusIndex = Math.min(2, currentOrder.statusIndex + 1);
-  saveLocal(currentOrder);
-  render();
-
-  try {
-    await writeOrderToFirestore();
-  } catch (e) {
-    console.warn(e);
-    setBackendMsg("Backend: Firestore write blocked ⚠️");
-  }
-});
-
-qs("resetOrderBtn").addEventListener("click", () => {
-  currentOrder = { orderId: "", statusIndex: -1 };
-  saveLocal(currentOrder);
-  render();
-
-  if (unsub) unsub();
-  unsub = null;
-
-  setBackendMsg("Backend: connected ✅ (reset)");
-});
+document.addEventListener("DOMContentLoaded", init);

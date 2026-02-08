@@ -40,13 +40,6 @@
   background: #238a7d;
 }
 
-/* Mobile */
-@media (max-width: 600px){
-  .cart-bar{
-    padding: 10px 14px;
-  }
-}
-
 
 /* =========================
    CART PAGE

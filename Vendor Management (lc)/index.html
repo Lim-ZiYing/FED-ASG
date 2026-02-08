@@ -15,9 +15,13 @@
 
 <section>
     <h2>Add Menu Item</h2>
-    <form id="menuForm">
-        <label>Item Name:</label>
-        <input type="text" id="itemName" required>
+
+<div>
+  Item Name:<br>
+  <input type="text" id="itemName">
+</div>
+
+<br>
 
 <div>
   Price:<br>
@@ -26,11 +30,19 @@
 
 <br>
 
-        <label>Cuisines (comma separated):</label>
-        <input type="text" id="itemCuisine">
+<div>
+  Cuisines (comma separated):<br>
+  <input type="text" id="itemCuisine">
+</div>
 
-        <button type="submit">Add Item</button>
-    </form>
+<br>
+
+<button id="addItemBtn">Add Item</button>
+</section>
+
+<section>
+    <h2>Menu Items</h2>
+    <ul id="menuList"></ul>
 </section>
 
 <section>

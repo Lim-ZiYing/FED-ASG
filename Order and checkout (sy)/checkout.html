@@ -2,14 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Checkout</title>
+
 
   <link rel="stylesheet" href="base.css">
   <link rel="stylesheet" href="checkout.css">
 </head>
 <body>
 
-<header>Checkout</header>
 
 <main id="checkoutView">
 
@@ -26,7 +25,10 @@
     </label>
 
     <h3>Delivery</h3>
-
+    <label class="row">
+      <input type="radio" name="delivery" value="0" data-label="None" checked>
+       <span>No delivery (+$0.00)</span>
+    </label>
     <label class="row">
       <input type="radio" name="delivery" value="9" data-label="Priority">
       <span>Priority (+$9.00)</span>

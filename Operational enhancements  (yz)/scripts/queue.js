@@ -5,32 +5,19 @@ import {
   query,
   orderBy,
   doc,
+  getDoc,
   updateDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-
-
-
-// ---------- HEADER LOGIC (REPLACE WITH THIS) ----------
-
+// URL param: ?stall=Ah%20Hock%20Chicken%20Rice
 const params = new URLSearchParams(window.location.search);
-const selectedStall = params.get("stall");
+const selectedStall = decodeURIComponent(params.get("stall") || "");
 const stallTitleEl = document.getElementById("stallTitle");
 const backBtn = document.getElementById("backBtn");
 
-console.log("Selected stall from URL:", selectedStall);
-
-if (selectedStall) {
-  stallTitleEl.textContent = decodeURIComponent(selectedStall);
-} else {
-  stallTitleEl.textContent = "Queue";
-}
-
-backBtn.addEventListener("click", () => {
-  window.location.href = "main.html";
-});
-
+stallTitleEl.textContent = selectedStall ? selectedStall : "Queue";
+backBtn.addEventListener("click", () => (window.location.href = "main.html"));
 
 // UI elements
 const queueListEl = document.getElementById("queueList");
@@ -39,113 +26,164 @@ const nowServingNoEl = document.getElementById("nowServingNo");
 const nowServingHintEl = document.getElementById("nowServingHint");
 const prevBtn = document.getElementById("prevBtn");
 const nextBtn = document.getElementById("nextBtn");
-const ordersListEl = document.getElementById("ordersList");
 
-// Local page state (simple)
-// We keep "Now Serving" only in UI to avoid messing with teammates' statusText.
-let activeOrders = [];  // array of { id(docId), orderId, items, statusText, statusIndex, createdAt }
+let activeOrders = []; // [{docId, orderId, itemsForThisStall, addons, createdAt}]
 let nowIndex = 0;
 
-// Helpers
 function safeText(v, fallback = "—") {
-  return (v === null || v === undefined || v === "") ? fallback : String(v);
+  return v === null || v === undefined || v === "" ? fallback : String(v);
 }
-function pillClass(type) {
-  if (type === "SERVING") return "pill serving";
-  if (type === "COMPLETED") return "pill completed";
-  return "pill waiting";
-}
+
 function clampNowIndex() {
   if (activeOrders.length === 0) nowIndex = 0;
   else if (nowIndex < 0) nowIndex = 0;
   else if (nowIndex >= activeOrders.length) nowIndex = activeOrders.length - 1;
 }
 
-// Render UI
 function render() {
   clampNowIndex();
 
-  const now = activeOrders[nowIndex] ?? null;
-  const nowDocId = now?.id ?? null;
+  const now = activeOrders[nowIndex] || null;
 
-  // LEFT TOP: Current Queue
-  if (activeOrders.length === 0) {
-    queueListEl.innerHTML = `<div class="empty">No active orders in queue.</div>`;
-  } else {
-    queueListEl.innerHTML = activeOrders.map(o => {
-      const isServing = o.id === nowDocId;
-      const statusLabel = isServing ? "Serving" : safeText(o.statusText, "Waiting");
+  // Total waiting: number of active orders for this stall
+  totalWaitingEl.textContent = String(activeOrders.length);
 
-      return `
-        <div class="queueRow">
-          <div class="queueNum">${safeText(o.orderId, "ORD-????")}</div>
-          <div class="${pillClass(isServing ? "SERVING" : "WAITING")}">${statusLabel}</div>
-        </div>
-      `;
-    }).join("");
-  }
-
-  // Total waiting = active - 1 (if any serving)
-  const waitingCount = activeOrders.length === 0 ? 0 : Math.max(0, activeOrders.length - 1);
-  totalWaitingEl.textContent = String(waitingCount);
-
-  // LEFT BOTTOM: Now Serving box
   if (!now) {
     nowServingNoEl.textContent = "—";
     nowServingHintEl.textContent = "No active orders.";
-    prevBtn.disabled = true;
-    nextBtn.disabled = true;
   } else {
     nowServingNoEl.textContent = safeText(now.orderId, "ORD-????");
-    const itemsCount = Array.isArray(now.items) ? now.items.length : 0;
-    nowServingHintEl.textContent = `Serving ${itemsCount} item(s).`;
 
-    prevBtn.disabled = nowIndex <= 0;
-    nextBtn.disabled = nowIndex >= activeOrders.length - 1;
+    const takeaway = !!now.addons?.takeaway;
+    const deliveryType = now.addons?.deliveryType || "None";
+
+    const flags = [
+      takeaway ? "Takeaway" : "Dine-in",
+      deliveryType !== "None" ? `Delivery (${deliveryType})` : null
+    ].filter(Boolean);
+
+    nowServingHintEl.textContent = flags.length
+      ? `Serving • ${flags.join(" • ")}`
+      : "Serving";
   }
 
-  // RIGHT: New Orders list + Completed button
   if (activeOrders.length === 0) {
-    ordersListEl.innerHTML = `<div class="empty">No new orders.</div>`;
-  } else {
-    ordersListEl.innerHTML = activeOrders.map(o => `
-      <div class="orderCard">
-        <div class="orderHeader">
-          <div class="orderNo">${safeText(o.orderId, "ORD-????")}</div>
-          <div class="${pillClass("WAITING")}">${safeText(o.statusText, "Waiting")}</div>
-        </div>
-
-        <ul class="items">
-          <li>${safeText(o.itemName, "Item")} × ${safeText(o.qty, 1)}</li>
-        </ul>
-
-
-        <div style="margin-top:10px; display:flex; gap:10px;">
-          <button class="btnDark" data-complete="${o.docId}">Completed</button>
-        </div>
-      </div>
-    `).join("");
-
-    document.querySelectorAll("[data-complete]").forEach(btn => {
-      btn.addEventListener("click", async () => {
-        const docId = btn.getAttribute("data-complete");
-        await markCompleted(docId);
-      });
-    });
+    queueListEl.innerHTML = `<div class="empty">No active orders in queue.</div>`;
+    return;
   }
-}
 
-async function markCompleted(docId) {
-  const ref = doc(db, "orders", docId);
-  await updateDoc(ref, {
-    statusText: "Completed",
-    statusIndex: 2,
-    completedAt: serverTimestamp()
+  queueListEl.innerHTML = activeOrders
+    .map((o, idx) => {
+      const isServing = idx === nowIndex;
+
+      const takeaway = !!o.addons?.takeaway;
+      const deliveryType = o.addons?.deliveryType || "None";
+
+      const itemsHtml = (o.itemsForThisStall || [])
+        .map((it) => {
+          const isReady = it.ready === true;
+
+          return `
+            <li>
+              ${safeText(it.name)} × ${safeText(it.qty, 1)}
+              <div class="subtext">
+                ${takeaway ? "🥡 Takeaway" : "🍽 Dine-in"}
+                ${deliveryType !== "None" ? ` • 🚚 Delivery (${safeText(deliveryType)})` : ""}
+                ${isReady ? " • ✅ Ready" : ""}
+              </div>
+            </li>
+          `;
+        })
+        .join("");
+
+      // Vendor-side status pill (derived from their items)
+      const anyReady = (o.itemsForThisStall || []).some((it) => it.ready === true);
+      const statusLabel = anyReady ? "Ready" : "Preparing";
+
+      return `
+        <div class="orderCard ${isServing ? "servingCard" : ""}">
+          <div class="rowTop">
+            <div class="orderNo">${safeText(o.orderId)}</div>
+            <div class="statusPill">${statusLabel}</div>
+          </div>
+
+          <ul class="items">${itemsHtml}</ul>
+
+          <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btnDark" data-ready="${o.docId}">Ready</button>
+            <button class="btnDark" data-complete="${o.docId}">Completed</button>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+
+  // Ready: only this stall's items become ready:true
+  document.querySelectorAll("[data-ready]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const docId = btn.getAttribute("data-ready");
+      await markReadyForStallItems(docId);
+    });
   });
 
+  // Completed: only this stall's items become completed:true
+  document.querySelectorAll("[data-complete]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const docId = btn.getAttribute("data-complete");
+      await markCompletedForStallItems(docId);
+    });
+  });
 }
 
-// Prev/Next changes serving order (UI only)
+// ---------- ITEM-LEVEL updates (the key fix) ----------
+async function markReadyForStallItems(docId) {
+  const ref = doc(db, "orders", docId);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return;
+
+  const data = snap.data();
+  const items = Array.isArray(data.items) ? data.items : [];
+
+  const updated = items.map((it) => {
+    if (it.stall === selectedStall && it.completed !== true) {
+      return { ...it, ready: true }; // ✅ item-level
+    }
+    return it;
+  });
+
+  await updateDoc(ref, {
+    items: updated,
+    updatedAt: serverTimestamp()
+  });
+}
+
+async function markCompletedForStallItems(docId) {
+  const ref = doc(db, "orders", docId);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return;
+
+  const data = snap.data();
+  const items = Array.isArray(data.items) ? data.items : [];
+
+  const updated = items.map((it) => {
+    if (it.stall === selectedStall) {
+      return { ...it, completed: true }; // ✅ item-level
+    }
+    return it;
+  });
+
+  // Only mark whole order completed if ALL items are completed
+  const allDone = updated.length > 0 && updated.every((it) => it.completed === true);
+
+  await updateDoc(ref, {
+    items: updated,
+    ...(allDone
+      ? { statusText: "Completed", statusIndex: 2, completedAt: serverTimestamp() }
+      : { updatedAt: serverTimestamp() })
+  });
+}
+
+// Prev/Next changes "now serving" in UI only
 prevBtn.addEventListener("click", () => {
   nowIndex -= 1;
   render();
@@ -156,36 +194,32 @@ nextBtn.addEventListener("click", () => {
 });
 
 // Listen to Firebase orders in real-time
-// Sort by createdAt so queue is oldest -> newest
 const ordersQuery = query(collection(db, "orders"), orderBy("createdAt", "asc"));
 
 onSnapshot(ordersQuery, (snapshot) => {
-  const all = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  const all = snapshot.docs.map((d) => ({ docId: d.id, ...d.data() }));
 
-  // RESET queue
   activeOrders = [];
 
-  all.forEach(order => {
-    // ignore completed orders
-    if ((order.statusText ?? "") === "Completed") return;
-
-    // only take items that belong to THIS stall
+  all.forEach((order) => {
     if (!Array.isArray(order.items)) return;
 
-    order.items
-      .filter(it => it.stall === decodeURIComponent(selectedStall))
-      .forEach(it => {
-        activeOrders.push({
-          docId: order.id,           // Firestore document ID
-          orderId: order.orderId,    // ORD-7764
-          itemName: it.name,
-          qty: it.qty,
-          statusText: order.statusText
-        });
+    // Vendor sees only their stall's items that are NOT completed
+    const itemsForStall = order.items.filter(
+      (it) => it.stall === selectedStall && it.completed !== true
+    );
+
+    if (itemsForStall.length > 0) {
+      activeOrders.push({
+        docId: order.docId,
+        orderId: order.orderId,
+        itemsForThisStall: itemsForStall,
+        addons: order.addons || {},
+        createdAt: order.createdAt || null
       });
+    }
   });
 
   clampNowIndex();
   render();
 });
-

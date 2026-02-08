@@ -307,17 +307,17 @@ function updateCheckoutTotal() {
 async function handlePaymentPage() {
   if (!resultText) return;
 
-  // ✅ Block payment if cart empty
+  // Block payment if cart empty
   if (!Array.isArray(cart) || cart.length === 0) {
     resultText.textContent = "Cart is empty. Please add items before paying.";
     return;
   }
 
-  const ok = Math.random() > 0.3;
-  if (!ok) {
-    resultText.textContent = "Payment Failed ❌";
-    return;
-  }
+ // const ok = Math.random() > 0.3;
+  //if (!ok) {
+    //resultText.textContent = "Payment Failed ❌";
+    //return;
+  //}
 
   const base = cart.reduce((sum, i) => sum + safeNumber(i.price) * safeNumber(i.qty), 0);
   const state = loadCheckoutState();
@@ -330,9 +330,12 @@ async function handlePaymentPage() {
 
   resultText.textContent = "Payment Successful ✅ Saving order...";
 
-  await db.collection("orders").add({
+  // Save order to Firestore
+  const orderDocRef = db.collection("orders").doc(orderId);
+
+  await orderDocRef.set({
     orderId,
-    statusText: "Paid",
+    statusText: "Received",
     paymentMethod: state.paymentMethod,
     addons: {
       takeaway: !!state.takeaway,
@@ -347,12 +350,55 @@ async function handlePaymentPage() {
     items: cart,
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-  });
+  }, { merge: true });
 
+  // Save orderId for tracking page
+  localStorage.setItem("lastOrderId", orderId);
+
+  // Clear cart
   cart = [];
   saveCart();
-  resultText.textContent = `Payment Successful ✅ Order saved! (${orderId})`;
+
+  // Show choice UI
+  resultText.innerHTML = `
+    <div style="margin-top:10px; font-weight:700;">
+      Payment Successful ✅ Order created:
+      <span style="color:#2563eb;">${orderId}</span>
+    </div>
+
+    <div style="margin-top:12px; color:#6b7280;">
+      Would you like to track your order now?
+    </div>
+
+    <div style="margin-top:14px; display:flex; gap:12px; flex-wrap:wrap;">
+      <button id="trackNowBtn" style="
+        padding:10px 16px; border-radius:10px; border:none;
+        background:#2563eb; color:#fff; font-weight:700; cursor:pointer;">
+        Track Order
+      </button>
+
+      <button id="trackLaterBtn" style="
+        padding:10px 16px; border-radius:10px; border:1px solid #e5e7eb;
+        background:#fff; color:#111827; font-weight:700; cursor:pointer;">
+        Not Now
+      </button>
+    </div>
+  `;
+
+  // Track Order → tracking page
+  document.getElementById("trackNowBtn").addEventListener("click", () => {
+    window.location.href =
+      "../Customer%20Engagement%20(zy)/tracking.html?orderId=" +
+      encodeURIComponent(orderId);
+  });
+
+  // ✅ Not Now → MAIN PAGE (FIXED)
+  document.getElementById("trackLaterBtn").addEventListener("click", () => {
+    window.location.href = "../main.html";
+  });
 }
+
+
 // ============================
 // ORDER HISTORY PAGE
 // ============================
@@ -375,7 +421,12 @@ async function renderOrderHistory() {
     if (countEl) countEl.textContent = `${snap.size} order(s)`;
 
     if (snap.empty) {
-      orderHistoryDiv.innerHTML = `<div class="card"><b>No orders yet.</b><div class="muted">Make a payment to generate an order.</div></div>`;
+      orderHistoryDiv.innerHTML = `
+        <div class="card">
+          <b>No orders yet.</b>
+          <div class="muted">Make a payment to generate an order.</div>
+        </div>
+      `;
       return;
     }
 
@@ -385,19 +436,28 @@ async function renderOrderHistory() {
       const o = doc.data();
 
       const orderId = o.orderId || doc.id;
-      const status = (o.statusText || o.status || "Unknown").toLowerCase();
-      const isPaid = status.includes("paid");
+
+      // ✅ Robust PAID detection (works with old + new formats)
+      const rawStatus = String(o.statusText ?? o.status ?? "").trim().toLowerCase();
+      const totalValue = Number(o?.totals?.total ?? o.total ?? 0);
+
+      const isPaid =
+        rawStatus === "paid" ||
+        rawStatus.includes("paid") ||
+        rawStatus === "success" ||
+        rawStatus.includes("success") ||
+        o.statusIndex === 1 ||
+        o.paid === true ||
+        totalValue > 0;
 
       const created = o.createdAt || o.updatedAt;
       const dateText = formatDate(created);
 
       const items = Array.isArray(o.items) ? o.items : [];
-      const itemsSubtotal = o.totals?.itemsSubtotal ?? 0;
-      const total = o.totals?.total ?? o.total ?? 0;
 
       const paymentMethod = o.paymentMethod || "-";
-      const takeawayFee = o.addons?.takeawayFee ?? 0;
-      const deliveryFee = o.addons?.deliveryFee ?? 0;
+      const takeawayFee = Number(o.addons?.takeawayFee ?? 0);
+      const deliveryFee = Number(o.addons?.deliveryFee ?? 0);
       const deliveryType = o.addons?.deliveryType ?? "None";
 
       const card = document.createElement("div");
@@ -414,7 +474,9 @@ async function renderOrderHistory() {
             <div class="item-row">
               <div class="left">
                 <div><b>${escapeHtml(it.name)}</b></div>
-                <div class="muted">${escapeHtml(it.stall || "")} • $${price.toFixed(2)} × ${qty}</div>
+                <div class="muted">${escapeHtml(it.stall || "")} • $${price.toFixed(
+                  2
+                )} × ${qty}</div>
               </div>
               <div>$${line}</div>
             </div>
@@ -422,7 +484,7 @@ async function renderOrderHistory() {
         })
         .join("");
 
-      const moreCount = items.length > 5 ? (items.length - 5) : 0;
+      const moreCount = items.length > 5 ? items.length - 5 : 0;
 
       card.innerHTML = `
         <div class="card-head">
@@ -433,8 +495,8 @@ async function renderOrderHistory() {
         <div class="meta">
           <div><span>Date</span>${escapeHtml(dateText)}</div>
           <div><span>Payment</span>${escapeHtml(paymentMethod)}</div>
-          <div><span>Delivery</span>${escapeHtml(deliveryType)} (+$${Number(deliveryFee).toFixed(2)})</div>
-          <div><span>Takeaway</span>+$${Number(takeawayFee).toFixed(2)}</div>
+          <div><span>Delivery</span>${escapeHtml(deliveryType)} (+$${deliveryFee.toFixed(2)})</div>
+          <div><span>Takeaway</span>+$${takeawayFee.toFixed(2)}</div>
         </div>
 
         <div class="items">
@@ -444,7 +506,7 @@ async function renderOrderHistory() {
 
         <div class="total-line">
           <div>Total</div>
-          <div>$${Number(total).toFixed(2)}</div>
+          <div>$${totalValue.toFixed(2)}</div>
         </div>
       `;
 
@@ -452,9 +514,15 @@ async function renderOrderHistory() {
     });
   } catch (err) {
     console.error(err);
-    orderHistoryDiv.innerHTML = `<div class="card"><b>Cannot load orders.</b><div class="muted">Check Firestore rules / console error.</div></div>`;
+    orderHistoryDiv.innerHTML = `
+      <div class="card">
+        <b>Cannot load orders.</b>
+        <div class="muted">Check Firestore rules / console error.</div>
+      </div>
+    `;
   }
 }
+
 
 
 // ============================

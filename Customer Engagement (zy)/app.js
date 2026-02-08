@@ -29,10 +29,13 @@ function qs(id){ return document.getElementById(id); }
    Data
 ============================= */
 const STALLS = [
-  { id:"stall_ah_hock", name:"Ah Hock Chicken Rice", cuisine:["Chinese"], ratingHint:"Fast & popular" },
-  { id:"stall_mala", name:"Xiao La Mala", cuisine:["Chinese","Spicy"], ratingHint:"Mala bowl" },
-  { id:"stall_prata", name:"Ravi Prata House", cuisine:["Indian"], ratingHint:"Crispy prata" }
+  { id:"S001", name:"Ah Hock Chicken Rice", cuisine:["Chinese"], unit:"#01-12" },
+  { id:"S002", name:"Mdm Tan Noodles", cuisine:["Chinese"], unit:"#01-15" },
+  { id:"S003", name:"Spice Corner", cuisine:["Indian"], unit:"#01-20" },
+  { id:"S004", name:"Vegemania", cuisine:["Vegetarian"], unit:"#01-23" },
+  { id:"S005", name:"Nasi Pandang", cuisine:["Indonesian"], unit:"#01-27" }
 ];
+
 
 const MENU_BY_STALL = {
   stall_ah_hock: [
@@ -237,43 +240,67 @@ function initHome(){
   if (!list) return;
 
   const search = qs("searchInput");
+
   const render = () => {
     const q = (search?.value || "").toLowerCase().trim();
     list.innerHTML = "";
-    const filtered = STALLS.filter(s => s.name.toLowerCase().includes(q));
-    filtered.forEach(s=>{
+
+    const filtered = STALLS.filter(s =>
+      s.name.toLowerCase().includes(q) ||
+      s.id.toLowerCase().includes(q) ||
+      (s.unit && s.unit.toLowerCase().includes(q))
+    );
+
+    filtered.forEach(s => {
       const avg = calcAvgRating(s.id);
+
       const div = document.createElement("div");
       div.className = "stall-card";
+
       div.innerHTML = `
         <div class="stall-img"></div>
-        <div>
+
+        <div class="stall-info">
           <h3 class="stall-name">${escapeHtml(s.name)}</h3>
+
           <div class="tags">
-            ${s.cuisine.map(c=>`<span class="tag">${escapeHtml(c)}</span>`).join("")}
+            ${s.cuisine.map(c => `<span class="tag">${escapeHtml(c)}</span>`).join("")}
             <span class="tag">⭐ ${avg.toFixed(1)}</span>
+            <span class="tag">${escapeHtml(s.id)}</span>
           </div>
-          <div class="muted small">${escapeHtml(s.ratingHint)}</div>
+
+          <div class="muted small">
+            ${escapeHtml(s.cuisine.join(", "))} • ${escapeHtml(s.unit)}
+          </div>
         </div>
-        <button class="btn btn-primary" data-view="${s.id}">${I18N[lang].view}</button>
+
+        <button class="btn btn-primary" data-view="${s.id}">
+          ${I18N[lang].view}
+        </button>
       `;
+
       list.appendChild(div);
     });
+
+    if (filtered.length === 0) {
+      list.innerHTML = `<div class="muted small">No stalls found.</div>`;
+    }
   };
 
   if (search) search.addEventListener("input", render);
 
-  document.addEventListener("click", (e)=>{
+  document.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-view]");
     if (!btn) return;
-    const stallId = btn.getAttribute("data-view");
-    currentStallId = stallId;
+
+    currentStallId = btn.getAttribute("data-view");
     localStorage.setItem("currentStallId", currentStallId);
     window.location.href = "stall.html";
   });
 
   render();
 }
+
 
 /* =============================
    Stall selector + header

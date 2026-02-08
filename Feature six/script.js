@@ -1,51 +1,61 @@
-let users = JSON.parse(localStorage.getItem("users")) || [];
-let currentUser = JSON.parse(localStorage.getItem("currentUser"));
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { 
+  getAuth, 
+  createUserWithEmailAndPassword,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-document.getElementById("registerForm").addEventListener("submit", function(e){
-    e.preventDefault();
+import { 
+  getFirestore, 
+  setDoc, 
+  doc, 
+  addDoc,
+  collection
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    let user = {
-        name: regName.value,
-        email: regEmail.value,
-        password: regPassword.value,
-        role: regRole.value
-    };
+const firebaseConfig = {
+apiKey: "AIzaSyAL8H-6QQcdpIKnZynqdVYnBjSXNdYaCKE",
+  authDomain: "fed-assignment-607f5.firebaseapp.com",
+  projectId: "fed-assignment-607f5",
+  storageBucket: "fed-assignment-607f5.firebasestorage.app",
+  messagingSenderId: "865290865679",
+  appId: "1:865290865679:web:fa9903ebfb2705f3b8a77a",
+  measurementId: "G-CH6JWEQ7E2"
+};
 
-    users.push(user);
-    localStorage.setItem("users", JSON.stringify(users));
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-    alert("Registration successful!");
+document.getElementById("registerBtn").addEventListener("click", async () => {
+
+  const name = regName.value;
+  const email = regEmail.value;
+  const password = regPassword.value;
+  const role = regRole.value;
+
+  const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+  const user = userCredential.user;
+
+  let stallId = null;
+
+  if(role === "vendor"){
+
+    const stallRef = await addDoc(collection(db, "stalls"), {
+      name: name + "'s Stall",
+      ownerId: user.uid,
+      createdAt: new Date()
+    });
+
+    stallId = stallRef.id;
+  }
+
+  await setDoc(doc(db, "users", user.uid), {
+    name: name,
+    email: email,
+    role: role,
+    stallId: stallId
+  });
+
+  alert("Registration successful!");
 });
-
-document.getElementById("loginForm").addEventListener("submit", function(e){
-    e.preventDefault();
-
-    let email = loginEmail.value;
-    let password = loginPassword.value;
-
-    let foundUser = users.find(user => 
-        user.email === email && user.password === password
-    );
-
-    if(foundUser){
-        localStorage.setItem("currentUser", JSON.stringify(foundUser));
-        showProfile(foundUser);
-    } else {
-        alert("Invalid login credentials");
-    }
-});
-
-function showProfile(user){
-    document.getElementById("profileSection").style.display = "block";
-    document.getElementById("profileInfo").innerText =
-        `Name: ${user.name} | Role: ${user.role}`;
-}
-
-function logout(){
-    localStorage.removeItem("currentUser");
-    location.reload();
-}
-
-if(currentUser){
-    showProfile(currentUser);
-}

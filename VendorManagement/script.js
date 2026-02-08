@@ -22,11 +22,6 @@ auth.onAuthStateChanged(async (user) => {
   const userSnap = await getDoc(doc(db, "users", user.uid));
   const userData = userSnap.data();
 
-  if (userData.role !== "vendor") {
-    alert("Access denied.");
-    return;
-  }
-
   stallId = userData.stallId;
 
   loadMenuItems();

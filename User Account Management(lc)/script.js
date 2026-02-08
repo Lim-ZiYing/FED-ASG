@@ -1,51 +1,161 @@
-let users = JSON.parse(localStorage.getItem("users")) || [];
-let currentUser = JSON.parse(localStorage.getItem("currentUser"));
+import { auth, db } from "./firebase.js";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-document.getElementById("registerForm").addEventListener("submit", function(e){
-    e.preventDefault();
+import {
+  setDoc,
+  doc,
+  addDoc,
+  collection,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    let user = {
-        name: regName.value,
-        email: regEmail.value,
-        password: regPassword.value,
-        role: regRole.value
-    };
 
-    users.push(user);
-    localStorage.setItem("users", JSON.stringify(users));
+// ================= REGISTER =================
+document.getElementById("registerForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const name = document.getElementById("regName").value;
+  const email = document.getElementById("regEmail").value;
+  const password = document.getElementById("regPassword").value;
+  const role = document.getElementById("regRole").value;
+
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    let stallId = null;
+
+    // If vendor → create stall
+    if (role === "vendor") {
+      const stallRef = await addDoc(collection(db, "stalls"), {
+        name: name + "'s Stall",
+        ownerId: user.uid,
+        createdAt: new Date()
+      });
+      stallId = stallRef.id;
+    }
+
+    await setDoc(doc(db, "users", user.uid), {
+      name,
+      email,
+      role,
+      stallId
+    });
 
     alert("Registration successful!");
+  } catch (error) {
+    alert(error.message);
+  }
 });
 
-document.getElementById("loginForm").addEventListener("submit", function(e){
-    e.preventDefault();
 
-    let email = loginEmail.value;
-    let password = loginPassword.value;
+// ================= LOGIN =================
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-    let foundUser = users.find(user => 
-        user.email === email && user.password === password
-    );
+  const email = document.getElementById("loginEmail").value;
+  const password = document.getElementById("loginPassword").value;
 
-    if(foundUser){
-        localStorage.setItem("currentUser", JSON.stringify(foundUser));
-        showProfile(foundUser);
-    } else {
-        alert("Invalid login credentials");
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+
+    const userSnap = await getDoc(doc(db, "users", userCredential.user.uid));
+    const userData = userSnap.data();
+
+    if (userData.role === "vendor") {
+      window.location.href = "../VendorManagement/index.html";
     }
+    else if (userData.role === "patron") {
+      window.location.href = "../Customer Engagement (zy)/index.html";
+    }
+    else if (userData.role === "nea") {
+      window.location.href = "../Main.html";
+    }
+
+  } catch (error) {
+    alert(error.message);
+  }
+});import { auth, db } from "./firebase.js";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+import {
+  setDoc,
+  doc,
+  addDoc,
+  collection,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+
+// ================= REGISTER =================
+document.getElementById("registerForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const name = document.getElementById("regName").value;
+  const email = document.getElementById("regEmail").value;
+  const password = document.getElementById("regPassword").value;
+  const role = document.getElementById("regRole").value;
+
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    let stallId = null;
+
+    // If vendor → create stall
+    if (role === "vendor") {
+      const stallRef = await addDoc(collection(db, "stalls"), {
+        name: name + "'s Stall",
+        ownerId: user.uid,
+        createdAt: new Date()
+      });
+      stallId = stallRef.id;
+    }
+
+    await setDoc(doc(db, "users", user.uid), {
+      name,
+      email,
+      role,
+      stallId
+    });
+
+    alert("Registration successful!");
+  } catch (error) {
+    alert(error.message);
+  }
 });
 
-function showProfile(user){
-    document.getElementById("profileSection").style.display = "block";
-    document.getElementById("profileInfo").innerText =
-        `Name: ${user.name} | Role: ${user.role}`;
-}
 
-function logout(){
-    localStorage.removeItem("currentUser");
-    location.reload();
-}
+// ================= LOGIN =================
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-if(currentUser){
-    showProfile(currentUser);
-}
+  const email = document.getElementById("loginEmail").value;
+  const password = document.getElementById("loginPassword").value;
+
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+
+    const userSnap = await getDoc(doc(db, "users", userCredential.user.uid));
+    const userData = userSnap.data();
+
+    if (userData.role === "vendor") {
+      window.location.href = "../VendorManagement/index.html";
+    }
+    else if (userData.role === "patron") {
+      window.location.href = "../Customer Engagement (zy)/index.html";
+    }
+    else if (userData.role === "nea") {
+      window.location.href = "../Main.html";
+    }
+
+  } catch (error) {
+    alert(error.message);
+  }
+});

@@ -7,60 +7,61 @@ import {
 
 import { 
   setDoc, 
-  doc, 
-  addDoc,
-  collection,
+  doc,
   getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 
 // REGISTER
-document.getElementById("registerBtn").addEventListener("click", async () => {
+document.getElementById("registerForm")
+.addEventListener("submit", async (e) => {
 
-  const name = regName.value;
-  const email = regEmail.value;
-  const password = regPassword.value;
-  const role = regRole.value;
+  e.preventDefault();
 
-  const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-  const user = userCredential.user;
+  const name = document.getElementById("regName").value;
+  const email = document.getElementById("regEmail").value;
+  const password = document.getElementById("regPassword").value;
+  const role = document.getElementById("regRole").value;
 
-  let stallId = null;
+  try {
 
-  if(role === "vendor"){
+    const userCredential =
+      await createUserWithEmailAndPassword(auth, email, password);
 
-    const stallRef = await addDoc(collection(db, "stalls"), {
-      name: name + "'s Stall",
-      ownerId: user.uid,
-      createdAt: new Date()
+    await setDoc(doc(db, "users", userCredential.user.uid), {
+      name,
+      email,
+      role
     });
 
-    stallId = stallRef.id;
+    alert("Registration successful!");
+
+  } catch(error){
+    alert(error.message);
   }
-
-  await setDoc(doc(db, "users", user.uid), {
-    name: name,
-    email: email,
-    role: role,
-    stallId: stallId
-  });
-
-  alert("Registration successful!");
 });
 
 
 // LOGIN
-document.getElementById("loginBtn").addEventListener("click", async () => {
+document.getElementById("loginForm")
+.addEventListener("submit", async (e) => {
 
-  const email = loginEmail.value;
-  const password = loginPassword.value;
+  e.preventDefault();
 
-  const userCredential = await signInWithEmailAndPassword(auth, email, password);
+  const email = document.getElementById("loginEmail").value;
+  const password = document.getElementById("loginPassword").value;
 
-  const userSnap = await getDoc(doc(db, "users", userCredential.user.uid));
-  const userData = userSnap.data();
+  try {
 
- alert("Login successful");
-    alert("Patron logged in!");
+    const userCredential =
+      await signInWithEmailAndPassword(auth, email, password);
+
+    const userSnap =
+      await getDoc(doc(db, "users", userCredential.user.uid));
+
+    alert("Login successful!");
+
+  } catch(error){
+    alert(error.message);
   }
-);
+});

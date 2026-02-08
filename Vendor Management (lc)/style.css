@@ -29,3 +29,13 @@ button {
     color: white;
     border: none;
 }
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
+}
+
+.form-row label {
+  margin-bottom: 5px;
+}

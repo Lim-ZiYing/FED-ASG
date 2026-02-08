@@ -378,7 +378,12 @@ async function renderOrderHistory() {
     if (countEl) countEl.textContent = `${snap.size} order(s)`;
 
     if (snap.empty) {
-      orderHistoryDiv.innerHTML = `<div class="card"><b>No orders yet.</b><div class="muted">Make a payment to generate an order.</div></div>`;
+      orderHistoryDiv.innerHTML = `
+        <div class="card">
+          <b>No orders yet.</b>
+          <div class="muted">Make a payment to generate an order.</div>
+        </div>
+      `;
       return;
     }
 
@@ -388,19 +393,28 @@ async function renderOrderHistory() {
       const o = doc.data();
 
       const orderId = o.orderId || doc.id;
-      const status = (o.statusText || o.status || "Unknown").toLowerCase();
-      const isPaid = status.includes("paid");
+
+      // ✅ Robust PAID detection (works with old + new formats)
+      const rawStatus = String(o.statusText ?? o.status ?? "").trim().toLowerCase();
+      const totalValue = Number(o?.totals?.total ?? o.total ?? 0);
+
+      const isPaid =
+        rawStatus === "paid" ||
+        rawStatus.includes("paid") ||
+        rawStatus === "success" ||
+        rawStatus.includes("success") ||
+        o.statusIndex === 1 ||
+        o.paid === true ||
+        totalValue > 0;
 
       const created = o.createdAt || o.updatedAt;
       const dateText = formatDate(created);
 
       const items = Array.isArray(o.items) ? o.items : [];
-      const itemsSubtotal = o.totals?.itemsSubtotal ?? 0;
-      const total = o.totals?.total ?? o.total ?? 0;
 
       const paymentMethod = o.paymentMethod || "-";
-      const takeawayFee = o.addons?.takeawayFee ?? 0;
-      const deliveryFee = o.addons?.deliveryFee ?? 0;
+      const takeawayFee = Number(o.addons?.takeawayFee ?? 0);
+      const deliveryFee = Number(o.addons?.deliveryFee ?? 0);
       const deliveryType = o.addons?.deliveryType ?? "None";
 
       const card = document.createElement("div");
@@ -417,7 +431,9 @@ async function renderOrderHistory() {
             <div class="item-row">
               <div class="left">
                 <div><b>${escapeHtml(it.name)}</b></div>
-                <div class="muted">${escapeHtml(it.stall || "")} • $${price.toFixed(2)} × ${qty}</div>
+                <div class="muted">${escapeHtml(it.stall || "")} • $${price.toFixed(
+                  2
+                )} × ${qty}</div>
               </div>
               <div>$${line}</div>
             </div>
@@ -425,7 +441,7 @@ async function renderOrderHistory() {
         })
         .join("");
 
-      const moreCount = items.length > 5 ? (items.length - 5) : 0;
+      const moreCount = items.length > 5 ? items.length - 5 : 0;
 
       card.innerHTML = `
         <div class="card-head">
@@ -436,8 +452,8 @@ async function renderOrderHistory() {
         <div class="meta">
           <div><span>Date</span>${escapeHtml(dateText)}</div>
           <div><span>Payment</span>${escapeHtml(paymentMethod)}</div>
-          <div><span>Delivery</span>${escapeHtml(deliveryType)} (+$${Number(deliveryFee).toFixed(2)})</div>
-          <div><span>Takeaway</span>+$${Number(takeawayFee).toFixed(2)}</div>
+          <div><span>Delivery</span>${escapeHtml(deliveryType)} (+$${deliveryFee.toFixed(2)})</div>
+          <div><span>Takeaway</span>+$${takeawayFee.toFixed(2)}</div>
         </div>
 
         <div class="items">
@@ -447,7 +463,7 @@ async function renderOrderHistory() {
 
         <div class="total-line">
           <div>Total</div>
-          <div>$${Number(total).toFixed(2)}</div>
+          <div>$${totalValue.toFixed(2)}</div>
         </div>
       `;
 
@@ -455,9 +471,15 @@ async function renderOrderHistory() {
     });
   } catch (err) {
     console.error(err);
-    orderHistoryDiv.innerHTML = `<div class="card"><b>Cannot load orders.</b><div class="muted">Check Firestore rules / console error.</div></div>`;
+    orderHistoryDiv.innerHTML = `
+      <div class="card">
+        <b>Cannot load orders.</b>
+        <div class="muted">Check Firestore rules / console error.</div>
+      </div>
+    `;
   }
 }
+
 
 
 // ============================

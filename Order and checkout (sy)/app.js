@@ -304,9 +304,6 @@ function updateCheckoutTotal() {
 // ============================
 // PAYMENT PAGE
 // ============================
-// ============================
-// PAYMENT PAGE (UPDATED to LINK FIREBASE ORDER ID)
-// ============================
 async function handlePaymentPage() {
   if (!resultText) return;
 
@@ -333,51 +330,75 @@ async function handlePaymentPage() {
 
   resultText.textContent = "Payment Successful ✅ Saving order...";
 
-  // ✅ IMPORTANT: use ORDER ID as the DOCUMENT ID so all modules can link
-  await db.collection("orders").doc(orderId).set({
+  // ✅ Save into Firestore using orderId as doc ID
+  const orderDocRef = db.collection("orders").doc(orderId);
+
+  await orderDocRef.set({
     orderId,
-
-    // ✅ Standard statuses used by tracking & queue
-    statusIndex: 0,
-    statusText: "Preparing",
-
-    // keep payment info as separate fields
-    paymentStatus: "Paid",
+    statusText: "Received",
     paymentMethod: state.paymentMethod,
-
     addons: {
       takeaway: !!state.takeaway,
       takeawayFee,
       deliveryType: state.deliveryLabel,
       deliveryFee,
     },
-
     totals: {
       itemsSubtotal: base,
       total,
     },
-
-    // ✅ items already contain: {id, name, price, stall, qty}
     items: cart,
-
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
   }, { merge: true });
 
-  // ✅ Save for tracking page to pick up
-  localStorage.setItem("activeOrderId", orderId);
+  // ✅ Save for tracking page
+  localStorage.setItem("lastOrderId", orderId);
 
+  // Clear cart
   cart = [];
   saveCart();
 
-  resultText.textContent = `Payment Successful ✅ Order saved! (${orderId})`;
+  // ✅ Instead of auto redirect, show options
+  // Update the UI with buttons
+  resultText.innerHTML = `
+    <div style="margin-top:10px; font-weight:700;">
+      Payment Successful ✅ Order created: <span style="color:#2563eb;">${orderId}</span>
+    </div>
 
-  // ✅ Auto go to YOUR tracking page
-  setTimeout(() => {
+    <div style="margin-top:12px; color:#6b7280;">
+      Would you like to track your order now?
+    </div>
+
+    <div style="margin-top:14px; display:flex; gap:12px; flex-wrap:wrap;">
+      <button id="trackNowBtn" style="
+        padding:10px 16px; border-radius:10px; border:none;
+        background:#2563eb; color:#fff; font-weight:700; cursor:pointer;">
+        Track Order
+      </button>
+
+      <button id="trackLaterBtn" style="
+        padding:10px 16px; border-radius:10px; border:1px solid #e5e7eb;
+        background:#fff; color:#111827; font-weight:700; cursor:pointer;">
+        Not Now
+      </button>
+    </div>
+  `;
+
+  // ✅ Track Order → go tracking page with orderId
+  document.getElementById("trackNowBtn").addEventListener("click", () => {
+    // change path if your folders are different
     window.location.href =
-      "../Customer%20Engagement%20(zy)/tracking.html?orderId=" + encodeURIComponent(orderId);
-  }, 900);
+      "../Customer Engagement (zy)/tracking.html?orderId=" + encodeURIComponent(orderId);
+  });
+
+  // ✅ Not Now → go home page (or anywhere your team wants)
+  document.getElementById("trackLaterBtn").addEventListener("click", () => {
+    // change this to the page your team wants after payment
+    window.location.href = "home.html";
+  });
 }
+
 
 // ============================
 // ORDER HISTORY PAGE

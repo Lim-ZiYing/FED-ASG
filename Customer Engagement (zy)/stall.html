@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Stall Detail</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">🍜</span>
+      <span class="appname" data-i18n="appTitle">Hawker Hub</span>
+    </div>
+    <div class="top-actions">
+      <a class="btn btn-ghost" href="home.html">← Home</a>
+      <button id="langToggle" class="btn btn-ghost" type="button">EN / 中文</button>
+      <a class="btn btn-outline" href="report.html" data-i18n="goReport">Go to Report Page</a>
+      <a class="btn btn-outline" href="tracking.html" data-i18n="goTracking">Go to Tracking Page</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- STALL SUMMARY + SELECT -->
+    <section class="card">
+      <div class="stall-header">
+        <div>
+          <div class="muted small" data-i18n="selectStall">Select Stall</div>
+          <select id="stallSelect"></select>
+          <h1 class="stall-name" id="stallName">—</h1>
+        </div>
+
+        <div class="rating-box">
+          <div id="avgRating" class="big">⭐ 0.0</div>
+          <div id="reviewCount" class="muted small">0 reviews</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="section-title">
+        <h3 data-i18n="promo">Promo Notification</h3>
+      </div>
+
+      <div class="row">
+        <label class="muted small">
+          <input type="checkbox" id="promoSubscribe"/>
+          <span data-i18n="subscribe">Subscribe to promotions</span>
+        </label>
+      </div>
+
+      <div id="promoBanner" class="promo-banner" hidden>
+        <strong>Promo:</strong> <span id="promoText"></span>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <input id="promoInput" type="text" placeholder="e.g. 20% off today!"/>
+        <button id="addPromoBtn" class="btn btn-primary" type="button" data-i18n="addPromo">Add Promo</button>
+      </div>
+    </section>
+
+    <div class="grid-2">
+      <!-- MENU -->
+      <section class="card">
+        <div class="section-title">
+          <h2 data-i18n="menu">Menu Items</h2>
+          <button id="resetLikesBtn" class="btn btn-ghost" type="button">Reset</button>
+        </div>
+        <div id="menuList" class="menu-list"></div>
+        <div class="divider"></div>
+        <h3 data-i18n="topLiked">Top Liked Items</h3>
+        <div id="topLikedList" class="muted small">—</div>
+      </section>
+
+      <!-- LOYALTY -->
+      <section class="card">
+        <div class="section-title">
+          <h2 data-i18n="loyalty">Rewards / Points</h2>
+        </div>
+        <div class="big" id="pointsText">0 pts</div>
+        <div class="row" style="margin-top:10px;">
+          <button id="earnPointsBtn" class="btn btn-primary" type="button" data-i18n="earn10">+ Earn 10 pts</button>
+          <button id="redeemBtn" class="btn btn-outline" type="button" data-i18n="redeem50">Redeem 50 pts</button>
+        </div>
+        <div id="loyaltyMsg" class="msg" hidden></div>
+
+        <div class="divider"></div>
+
+        <div class="section-title">
+          <h3 data-i18n="complaints">Report an Issue (Complaint)</h3>
+        </div>
+        <p class="muted small">Use the Report Page to submit a complaint form.</p>
+        <a class="btn btn-outline" href="report.html" data-i18n="goReport">Go to Report Page</a>
+      </section>
+    </div>
+
+    <!-- FEEDBACK / REVIEWS -->
+    <section class="card">
+      <div class="section-title">
+        <h2 data-i18n="feedback">Feedback (Ratings + Comments)</h2>
+        <button id="clearReviewsBtn" class="btn btn-ghost" type="button">Clear</button>
+      </div>
+
+      <form id="reviewForm" class="form">
+        <div class="form-row">
+          <label for="ratingInput" data-i18n="rating">Rating (1–5)</label>
+          <input id="ratingInput" type="number" min="1" max="5" required/>
+        </div>
+        <div class="form-row">
+          <label for="commentInput" data-i18n="comment">Comment</label>
+          <textarea id="commentInput" required></textarea>
+        </div>
+        <button class="btn btn-primary" type="submit" data-i18n="submitReview">Submit Review</button>
+      </form>
+
+      <div class="divider"></div>
+
+      <div class="section-title">
+        <h3 data-i18n="reviews">Customer Reviews</h3>
+        <select id="sortReviews">
+          <option value="latest">Sort: Latest</option>
+          <option value="highest">Sort: Highest</option>
+          <option value="lowest">Sort: Lowest</option>
+        </select>
+      </div>
+
+      <div id="reviewsList" class="review-list"></div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

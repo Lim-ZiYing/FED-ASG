@@ -1,0 +1,367 @@
+:root{
+  --bg:#f5f7fb;
+  --card:#ffffff;
+  --text:#111827;
+  --muted:#6b7280;
+  --line:#e5e7eb;
+  --accent:#2563eb;
+  --accent2:#1d4ed8;
+  --danger:#dc2626;
+  --ok:#16a34a;
+  --shadow:0 10px 28px rgba(17,24,39,.08);
+  --radius:16px;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family: Arial, Helvetica, sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+/* ===== Topbar ===== */
+.topbar{
+  position:sticky; top:0; z-index:10;
+  display:flex; justify-content:space-between; align-items:center;
+  padding:14px 18px;
+  background:rgba(245,247,251,.92);
+  border-bottom:1px solid var(--line);
+  backdrop-filter: blur(8px);
+}
+.brand{display:flex; align-items:center; gap:10px}
+.logo{font-size:22px}
+.appname{font-weight:800; font-size:18px}
+.top-actions{display:flex; gap:10px; align-items:center}
+
+/* ===== Layout ===== */
+.container{
+  max-width:1100px;
+  margin:0 auto;
+  padding:18px;
+}
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px;
+  box-shadow:var(--shadow);
+}
+.section-title{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  margin-bottom:10px;
+}
+.divider{height:1px;background:var(--line);margin:14px 0}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+
+/* ===== Inputs ===== */
+input,textarea,select{
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:10px;
+  background:#fff;
+  font-size:14px;
+}
+textarea{min-height:110px;resize:vertical}
+
+/* ===== Buttons ===== */
+.btn{
+  border:1px solid var(--line);
+  background:#fff;
+  color:var(--text);
+  padding:10px 12px;
+  border-radius:12px;
+  cursor:pointer;
+  text-decoration:none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  font-weight:600;
+}
+.btn:hover{border-color:#cbd5e1}
+.btn-primary{
+  background:var(--accent);
+  border-color:var(--accent);
+  color:#fff;
+}
+.btn-primary:hover{background:var(--accent2); border-color:var(--accent2)}
+.btn-ghost{background:transparent;color:var(--muted)}
+.btn-outline{background:transparent;border-color:var(--accent);color:var(--accent)}
+
+/* ===== Home stall cards ===== */
+.stall-cards{
+  display:grid;
+  gap:12px;
+}
+.stall-card{
+  display:grid;
+  grid-template-columns: 88px 1fr auto;
+  gap:12px;
+  align-items:center;
+  padding:12px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:#fff;
+}
+.stall-img{
+  width:88px;
+  height:64px;
+  border-radius:12px;
+  background:linear-gradient(135deg,#e8eefc,#f3f7ff);
+  border:1px solid var(--line);
+}
+.stall-name{
+  margin:0 0 6px 0;
+  font-size:20px;
+}
+.tags{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-bottom:4px;
+}
+.tag{
+  display:inline-flex;
+  align-items:center;
+  font-size:12px;
+  padding:4px 10px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:#fff;
+  color:var(--muted);
+}
+
+/* ===== Stall page menu/like/reviews (for your existing pages) ===== */
+.menu-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px 12px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  margin-bottom:10px;
+  background:#fff;
+}
+.menu-title{font-weight:700}
+.menu-meta{color:var(--muted); font-size:12px}
+.like{display:flex; align-items:center; gap:8px}
+.heart{
+  cursor:pointer;
+  font-weight:900;
+  font-size:18px;
+  color:#9ca3af;
+  user-select:none;
+}
+.heart.liked{color:#ef4444}
+.like-count{min-width:20px; text-align:right; color:var(--muted)}
+
+/* ===== Reviews / Complaints cards ===== */
+.review-card{
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:12px;
+  background:#fff;
+  margin-bottom:10px;
+}
+.review-top{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  align-items:flex-start;
+  margin-bottom:6px;
+}
+.review-stars{font-weight:700}
+.review-text{color:#111827}
+
+/* status pill */
+.status{
+  display:inline-block;
+  font-size:12px;
+  padding:3px 8px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  margin-left:8px;
+  vertical-align:middle;
+}
+.status.ok{border-color:rgba(22,163,74,.35);color:var(--ok)}
+.status.warn{border-color:rgba(220,38,38,.35);color:var(--danger)}
+
+/* ===== Simple grid for report page if you use it ===== */
+.grid-2{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:14px;
+}
+@media(max-width:900px){
+  .grid-2{grid-template-columns:1fr}
+}
+
+/* ===== Tracking step pills (if you have them) ===== */
+
+.step{
+  padding:8px 10px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  color:var(--muted);
+  display:inline-block;
+  margin-right:8px;
+}
+.step.active{
+  border-color:rgba(37,99,235,.35);
+  color:var(--accent);
+  background:rgba(37,99,235,.08);
+}
+
+/* ===== Order Tracking Timeline (CLEAN VERSION) ===== */
+.timeline{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:18px;
+  padding:18px 6px 8px;
+}
+
+/* each step */
+.t-step{
+  flex:1;
+  position:relative;
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  color:var(--muted);
+  padding-top:2px;
+}
+
+/* connector line (behind dot + label, not over text) */
+.t-step::after{
+  content:"";
+  position:absolute;
+  left:28px;        /* starts after dot */
+  right:-12px;      /* reach toward next */
+  top:12px;         /* align with dot center */
+  height:3px;
+  background:var(--line);
+  border-radius:999px;
+  z-index:0;        /* behind everything */
+}
+.t-step:last-child::after{
+  display:none;
+}
+
+/* dot */
+.t-dot{
+  width:22px;
+  height:22px;
+  border-radius:999px;
+  border:2px solid var(--line);
+  background:#fff;
+  flex:0 0 22px;
+  position:relative;
+  z-index:2;        /* above line */
+}
+
+/* label (give it background so the line never looks like it crosses text) */
+.t-label{
+  font-weight:700;
+  line-height:1.2;
+  margin-top:2px;
+  position:relative;
+  z-index:2;
+  background:var(--card);
+  padding:2px 6px;
+  border-radius:8px;
+}
+
+/* active state (JS toggles .active on #step0 #step1 #step2) */
+.t-step.active{
+  color:var(--accent);
+}
+.t-step.active .t-dot{
+  border-color:rgba(37,99,235,.7);
+  background:rgba(37,99,235,.12);
+}
+.t-step.active::after{
+  background:rgba(37,99,235,.45);
+}
+
+/* ===== Small helpers used by tracking.html ===== */
+.kv{
+  display:flex;
+  gap:40px;
+  margin-top:12px;
+  flex-wrap:wrap;
+}
+.notice{
+  margin-top:14px;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid var(--line);
+  background:#fff;
+  font-size:14px;
+  color:var(--muted);
+}
+
+/* ===== Order Tracking Timeline ===== */
+.timeline{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:18px;
+  padding:18px 6px 8px;
+}
+
+.t-step{
+  flex:1;
+  position:relative;
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  color:var(--muted);
+}
+
+.t-step::after{
+  content:"";
+  position:absolute;
+  left:28px;
+  right:-12px;
+  top:12px;
+  height:3px;
+  background:var(--line);
+  border-radius:999px;
+  z-index:0;
+}
+
+.t-step:last-child::after{ display:none; }
+
+.t-dot{
+  width:22px;
+  height:22px;
+  border-radius:999px;
+  border:2px solid var(--line);
+  background:#fff;
+  z-index:2;
+  flex:0 0 22px;
+}
+
+.t-label{
+  font-weight:800;
+  background:var(--card);
+  padding:2px 6px;
+  border-radius:8px;
+  z-index:2;
+}
+
+.t-step.active{ color:var(--accent); }
+.t-step.active .t-dot{
+  border-color:var(--accent);
+  background:rgba(37,99,235,.15);
+}
+.t-step.active::after{
+  background:rgba(37,99,235,.45);
+}

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Order History</title>
+
+  <link rel="stylesheet" href="base.css" />
+  <link rel="stylesheet" href="orderhistory.css" />
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="topbar-left">
+      <h1>Order History</h1>
+
+    </div>
+
+    <div class="topbar-right">
+      <button class="btn" onclick="location.href='menu.html'">Back to Menu</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="toolbar">
+      <div class="pill" id="orderCount">Loading…</div>
+      <button class="btn ghost" id="refreshBtn" type="button">Refresh</button>
+    </div>
+
+    <div id="orderHistory" class="grid"></div>
+  </main>
+
+  <!-- Firebase CDN (v8) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <script src="firebase.js"></script>
+  <script src="app.js"></script>
+
+</body>
+</html>

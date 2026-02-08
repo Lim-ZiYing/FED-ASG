@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Menu</title>
+
+
+  <link rel="stylesheet" href="../shared/style.css">
+
+
+  <link rel="stylesheet" href="base.css" />
+  <link rel="stylesheet" href="menu.css" />
+  <link rel="stylesheet" href="cart.css" />
+
+
+  <script defer src="../shared/navbar.js"></script>
+</head>
+
+<body>
+
+
+<div id="navbar"></div>
+
+
+<main class="container">
+  <h1>Food Ordering App</h1>
+  <div id="menu"></div>
+</main>
+
+<footer class="cart-bar">
+  <span id="totalPrice">Total: $0.00</span>
+  <button onclick="goCart()">View Cart</button>
+</footer>
+
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+
+<script src="firebase.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>

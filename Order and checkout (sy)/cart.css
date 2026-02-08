@@ -1,0 +1,32 @@
+.cart-bar{
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #fff;
+  border-top: 1px solid #ddd;
+  padding: 14px 24px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  z-index: 20;
+}
+
+.cart-item{
+  background:#fff;
+  border:1px solid #ddd;
+  border-radius:12px;
+  padding:14px;
+  margin-bottom: 12px;
+}
+
+.cart-title{
+  font-weight:800;
+  margin-bottom:10px;
+}
+
+.cart-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}

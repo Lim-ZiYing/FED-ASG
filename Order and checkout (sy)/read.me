@@ -1,0 +1,62 @@
+Key Features:
+Menu & Cart:
+
+Menu items are loaded dynamically from Firebase Firestore
+
+Users can add food items from multiple stalls to the cart
+
+Cart updates in real time (add / remove items)
+
+Cart data is stored in Local Storage for persistence
+
+Cart Validation:
+
+If the cart is empty, users cannot proceed to payment
+
+Prevents invalid or empty orders from being created
+
+Checkout:
+
+Displays a summary of selected items
+
+Optional add-ons:
+
+Takeaway packaging
+
+Delivery (not mandatory)
+
+Total price updates dynamically based on selections
+
+Multiple payment methods available (Card, NETS, Apple Pay, etc.)
+
+Payment:
+
+Payment process is simulated for demonstration purposes
+
+Successful payments:
+
+Generate a unique order ID
+
+Save order data to Firebase Firestore
+
+Failed payments are clearly indicated and not saved
+
+Order History:
+
+Retrieves all past orders from Firestore
+
+Displays:
+
+Order ID
+
+Date and time
+
+Payment method
+
+Add-on details
+
+Total amount
+
+Order status (PAID / FAILED)
+
+Expandable order view to display all items

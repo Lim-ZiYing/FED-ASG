@@ -9,15 +9,32 @@
     }
     *{ box-sizing:border-box; }
     body{ margin:0; font-family: Arial, sans-serif; color:var(--text); background:var(--bg); }
-    header{
-      padding:16px 18px;
-      background:var(--header);
-      border-bottom:1px solid #1f7f73;
-      color:var(--headerText);
-      text-align:center;
-      font-weight:900;
-      font-size:20px;
+    .headerBar {
+      display: grid;
+      grid-template-columns: 120px 1fr 120px;
+      align-items: center;
+      padding: 12px 16px;
+      background: #2a9d8f;
+      color: white;
     }
+
+    .headerTitle {
+      text-align: center;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .backBtn {
+      width: auto;
+      padding: 6px 10px;
+      font-size: 13px;
+      border-radius: 6px;
+      background: white;
+      color: #2a9d8f;
+      border: none;
+      cursor: pointer;
+    }
+
     main{ max-width:760px; margin:18px auto; padding:0 16px 20px; }
     .panel{
       background:var(--card);

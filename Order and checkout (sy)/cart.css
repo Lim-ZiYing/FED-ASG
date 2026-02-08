@@ -63,12 +63,10 @@ h1{
   font-size: 14px;
 }
 
-/* =========================
-   REMOVE BUTTON (soft red)
-   ========================= */
+
 .cart-row .btn{
   background: #ffffff;
-  color: #c2410c;
+  color: black;
   border: 1px solid #fed7aa;
   padding: 6px 12px;
   border-radius: 999px;
@@ -94,21 +92,19 @@ h1{
 /* =========================
    CHECKOUT BUTTON
    ========================= */
-.checkout-btn{
-  margin-top: 14px;
-  width: 100%;
-  background: #2a9d8f;
-  color: #ffffff;
-  border: none;
-  padding: 14px;
-  font-size: 16px;
-  font-weight: 900;
-  border-radius: 999px;
-  cursor: pointer;
+.primary{
+  width:100%;
+  background: linear-gradient(90deg, #2a9d8f, #34b3a4) !important;
+  color:#fff !important;
+  border:none !important;
+  padding:14px !important;
+  border-radius:999px !important;
+  font-weight:900 !important;
+  cursor:pointer;
 }
 
-.checkout-btn:hover{
-  background: #238a7d;
+.primary:hover{
+  background: linear-gradient(90deg, #238a7d, #2fa79a) !important;
 }
 
 /* =========================

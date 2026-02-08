@@ -8,106 +8,63 @@
 </head>
 <body>
 
-<header class="topbar">
-  <div class="brand">
-    <span class="logo">🍜</span>
-    <span class="appname">Hawker Hub</span>
-  </div>
-  <div class="top-actions">
-    <a class="btn btn-ghost" href="home.html">← Home</a>
-  </div>
-</header>
-
-<main class="container">
-  <section class="card">
-    <h2>Order Tracking</h2>
-
-    <div class="kv">
-      <div>
-        <div class="muted">order number / ID</div>
-        <strong id="orderId">—</strong>
-      </div>
-      <div>
-        <div class="muted">status</div>
-        <strong id="orderStatus">—</strong>
-      </div>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">🍜</span>
+      <span class="appname">Hawker Hub</span>
     </div>
-
-    <div class="divider"></div>
-    <div class="muted">timeline</div>
-
-    <div class="timeline">
-      <div id="step0" class="t-step">
-        <div class="t-dot"></div>
-        <div class="t-label">Preparing</div>
-      </div>
-      <div id="step1" class="t-step">
-        <div class="t-dot"></div>
-        <div class="t-label">Ready</div>
-      </div>
-      <div id="step2" class="t-step">
-        <div class="t-dot"></div>
-        <div class="t-label">Completed</div>
-      </div>
+    <div class="top-actions">
+      <a class="btn btn-ghost" href="home.html">← Home</a>
     </div>
+  </header>
 
-    <div class="divider"></div>
+  <main class="container">
+    <section class="card">
+      <h2>Order Tracking</h2>
 
-    <div id="backendMsg" class="notice">Backend: loading…</div>
-  </section>
-</main>
+      <div class="kv">
+        <div>
+          <div class="muted">order number / ID</div>
+          <strong id="orderId">—</strong>
+        </div>
+        <div>
+          <div class="muted">status</div>
+          <strong id="orderStatus">—</strong>
+        </div>
+      </div>
 
-<script type="module">
-  import { db } from "./firebase.js";
-  import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+      <div class="divider"></div>
 
-  const qs = (id)=>document.getElementById(id);
+      <div class="muted">the time line</div>
 
-  const statusName = (i)=>{
-    if(i===0) return "Preparing";
-    if(i===1) return "Ready";
-    if(i===2) return "Completed";
-    return "—";
-  };
+      <div class="timeline">
+        <div id="step0" class="t-step">
+          <div class="t-dot"></div>
+          <div class="t-label">Preparing</div>
+        </div>
+        <div id="step1" class="t-step">
+          <div class="t-dot"></div>
+          <div class="t-label">Ready</div>
+        </div>
+        <div id="step2" class="t-step">
+          <div class="t-dot"></div>
+          <div class="t-label">Completed</div>
+        </div>
+      </div>
 
-  function render(orderId, statusIndex){
-    qs("orderId").textContent = orderId || "—";
-    qs("orderStatus").textContent = statusName(statusIndex);
+      <div class="divider"></div>
 
-    ["step0","step1","step2"].forEach((id,idx)=>{
-      const el = qs(id);
-      el.classList.toggle("active", statusIndex >= idx && statusIndex !== -1);
-    });
-  }
+      <div class="row">
+        <button id="newOrderBtn" class="btn btn-primary">Create New Order (demo)</button>
+        <button id="advanceStatusBtn" class="btn btn-outline">Advance Status</button>
+        <button id="resetOrderBtn" class="btn btn-ghost">Reset</button>
+      </div>
 
-  function setBackendMsg(txt){
-    qs("backendMsg").textContent = txt;
-  }
+      <div id="backendMsg" class="notice">Backend: loading…</div>
+    </section>
+  </main>
 
-  // ✅ Get orderId from URL OR localStorage
-  const params = new URLSearchParams(window.location.search);
-  const orderId = params.get("orderId") || localStorage.getItem("activeOrderId") || "";
-
-  if(!orderId){
-    setBackendMsg("Backend: No orderId found. Create an order first.");
-    render("", -1);
-  }else{
-    localStorage.setItem("activeOrderId", orderId);
-    setBackendMsg("Backend: Listening to Firestore ✅");
-
-    const ref = doc(db, "orders", orderId);
-    onSnapshot(ref, (snap)=>{
-      if(!snap.exists()){
-        setBackendMsg("Backend: Order not found in Firestore ⚠️");
-        render(orderId, -1);
-        return;
-      }
-      const d = snap.data();
-      const statusIndex = typeof d.statusIndex === "number" ? d.statusIndex : -1;
-      render(orderId, statusIndex);
-    });
-  }
-</script>
-
+  <!-- IMPORTANT: must be type="module" -->
+  <script type="module" src="tracking-firebase.js"></script>
 </body>
 </html>

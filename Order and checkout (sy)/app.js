@@ -304,6 +304,9 @@ function updateCheckoutTotal() {
 // ============================
 // PAYMENT PAGE
 // ============================
+// ============================
+// PAYMENT PAGE (UPDATED to LINK FIREBASE ORDER ID)
+// ============================
 async function handlePaymentPage() {
   if (!resultText) return;
 
@@ -330,32 +333,52 @@ async function handlePaymentPage() {
 
   resultText.textContent = "Payment Successful ✅ Saving order...";
 
-  await db.collection("orders").add({
+  // ✅ IMPORTANT: use ORDER ID as the DOCUMENT ID so all modules can link
+  await db.collection("orders").doc(orderId).set({
     orderId,
-    statusText: "Paid",
+
+    // ✅ Standard statuses used by tracking & queue
+    statusIndex: 0,
+    statusText: "Preparing",
+
+    // keep payment info as separate fields
+    paymentStatus: "Paid",
     paymentMethod: state.paymentMethod,
+
     addons: {
       takeaway: !!state.takeaway,
       takeawayFee,
       deliveryType: state.deliveryLabel,
       deliveryFee,
     },
+
     totals: {
       itemsSubtotal: base,
       total,
     },
-    items: cart.map(it => ({
-    ...it,
-    completed: false
-    })),
+
+    // ✅ items already contain: {id, name, price, stall, qty}
+    items: cart,
+
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-  });
+  }, { merge: true });
+
+  // ✅ Save for tracking page to pick up
+  localStorage.setItem("activeOrderId", orderId);
 
   cart = [];
   saveCart();
+
   resultText.textContent = `Payment Successful ✅ Order saved! (${orderId})`;
+
+  // ✅ Auto go to YOUR tracking page
+  setTimeout(() => {
+    window.location.href =
+      "../Customer%20Engagement%20(zy)/tracking.html?orderId=" + encodeURIComponent(orderId);
+  }, 900);
 }
+
 // ============================
 // ORDER HISTORY PAGE
 // ============================

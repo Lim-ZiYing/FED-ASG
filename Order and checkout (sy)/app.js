@@ -307,7 +307,7 @@ function updateCheckoutTotal() {
 async function handlePaymentPage() {
   if (!resultText) return;
 
-  // ✅ Block payment if cart empty
+  // Block payment if cart empty
   if (!Array.isArray(cart) || cart.length === 0) {
     resultText.textContent = "Cart is empty. Please add items before paying.";
     return;
@@ -330,7 +330,7 @@ async function handlePaymentPage() {
 
   resultText.textContent = "Payment Successful ✅ Saving order...";
 
-  // ✅ Save into Firestore using orderId as doc ID
+  // Save order to Firestore
   const orderDocRef = db.collection("orders").doc(orderId);
 
   await orderDocRef.set({
@@ -352,18 +352,18 @@ async function handlePaymentPage() {
     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
   }, { merge: true });
 
-  // ✅ Save for tracking page
+  // Save orderId for tracking page
   localStorage.setItem("lastOrderId", orderId);
 
   // Clear cart
   cart = [];
   saveCart();
 
-  // ✅ Instead of auto redirect, show options
-  // Update the UI with buttons
+  // Show choice UI
   resultText.innerHTML = `
     <div style="margin-top:10px; font-weight:700;">
-      Payment Successful ✅ Order created: <span style="color:#2563eb;">${orderId}</span>
+      Payment Successful ✅ Order created:
+      <span style="color:#2563eb;">${orderId}</span>
     </div>
 
     <div style="margin-top:12px; color:#6b7280;">
@@ -385,17 +385,16 @@ async function handlePaymentPage() {
     </div>
   `;
 
-  // ✅ Track Order → go tracking page with orderId
+  // Track Order → tracking page
   document.getElementById("trackNowBtn").addEventListener("click", () => {
-    // change path if your folders are different
     window.location.href =
-      "../Customer Engagement (zy)/tracking.html?orderId=" + encodeURIComponent(orderId);
+      "../Customer%20Engagement%20(zy)/tracking.html?orderId=" +
+      encodeURIComponent(orderId);
   });
 
-  // ✅ Not Now → go home page (or anywhere your team wants)
+  // ✅ Not Now → MAIN PAGE (FIXED)
   document.getElementById("trackLaterBtn").addEventListener("click", () => {
-    // change this to the page your team wants after payment
-    window.location.href = "home.html";
+    window.location.href = "../main.html";
   });
 }
 

@@ -76,6 +76,7 @@ async function loadMenuFromFirestore() {
           id: safeNumber(x.id),
           name: x.name || "",
           price: safeNumber(x.price),
+          imageUrl: x.imageUrl || ""
         };
       })
       .sort((a, b) => a.id - b.id);
@@ -106,16 +107,22 @@ function renderMenuPage(stalls) {
     stall.items.forEach((item) => {
       const row = document.createElement("div");
       row.className = "food";
-
       row.innerHTML = `
-        <div class="food-left">
-          <div class="food-name">${escapeHtml(item.name)}</div>
+         <div class="food-left">
+           <img class="food-img"
+              src="${escapeHtml(item.imageUrl || 'https://via.placeholder.com/80')}"
+               alt="${escapeHtml(item.name)}">
+          <div class="food-info">
+         <div class="food-name">${escapeHtml(item.name)}</div>
         </div>
-        <div class="food-right">
+       </div>
+
+       <div class="food-right">
           <div class="food-price">$${safeNumber(item.price).toFixed(2)}</div>
-          <button class="btn" type="button">Add</button>
-        </div>
-      `;
+           <button class="btn" type="button">Add</button>
+       </div>
+`;
+
 
       row.querySelector("button").addEventListener("click", () => {
         addToCart(stall.name, item);

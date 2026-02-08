@@ -5,15 +5,12 @@ import {
   query,
   orderBy,
   doc,
+  getDoc,
   updateDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-
-
-
-// ---------- HEADER LOGIC (REPLACE WITH THIS) ----------
-
+// ---------- HEADER LOGIC ----------
 const params = new URLSearchParams(window.location.search);
 const selectedStall = params.get("stall");
 const stallTitleEl = document.getElementById("stallTitle");
@@ -21,18 +18,14 @@ const backBtn = document.getElementById("backBtn");
 
 console.log("Selected stall from URL:", selectedStall);
 
-if (selectedStall) {
-  stallTitleEl.textContent = decodeURIComponent(selectedStall);
-} else {
-  stallTitleEl.textContent = "Queue";
-}
+const stallName = selectedStall ? decodeURIComponent(selectedStall) : "";
+stallTitleEl.textContent = stallName || "Queue";
 
 backBtn.addEventListener("click", () => {
   window.location.href = "main.html";
 });
 
-
-// UI elements
+// ---------- UI elements ----------
 const queueListEl = document.getElementById("queueList");
 const totalWaitingEl = document.getElementById("totalWaiting");
 const nowServingNoEl = document.getElementById("nowServingNo");
@@ -41,39 +34,42 @@ const prevBtn = document.getElementById("prevBtn");
 const nextBtn = document.getElementById("nextBtn");
 const ordersListEl = document.getElementById("ordersList");
 
-// Local page state (simple)
-// We keep "Now Serving" only in UI to avoid messing with teammates' statusText.
-let activeOrders = [];  // array of { id(docId), orderId, items, statusText, statusIndex, createdAt }
+// ---------- Local state ----------
+// Each entry = ONE item for this stall
+// { docId, orderId, itemIndex, itemName, qty, statusText }
+let activeOrders = [];
 let nowIndex = 0;
 
-// Helpers
+// ---------- Helpers ----------
 function safeText(v, fallback = "—") {
   return (v === null || v === undefined || v === "") ? fallback : String(v);
 }
+
 function pillClass(type) {
   if (type === "SERVING") return "pill serving";
   if (type === "COMPLETED") return "pill completed";
   return "pill waiting";
 }
+
 function clampNowIndex() {
   if (activeOrders.length === 0) nowIndex = 0;
   else if (nowIndex < 0) nowIndex = 0;
   else if (nowIndex >= activeOrders.length) nowIndex = activeOrders.length - 1;
 }
 
-// Render UI
+// ---------- Render ----------
 function render() {
   clampNowIndex();
 
   const now = activeOrders[nowIndex] ?? null;
-  const nowDocId = now?.id ?? null;
+  const nowDocId = now?.docId ?? null; // ✅ use docId (not id)
 
   // LEFT TOP: Current Queue
   if (activeOrders.length === 0) {
     queueListEl.innerHTML = `<div class="empty">No active orders in queue.</div>`;
   } else {
     queueListEl.innerHTML = activeOrders.map(o => {
-      const isServing = o.id === nowDocId;
+      const isServing = o.docId === nowDocId && o.itemIndex === now?.itemIndex;
       const statusLabel = isServing ? "Serving" : safeText(o.statusText, "Waiting");
 
       return `
@@ -97,14 +93,13 @@ function render() {
     nextBtn.disabled = true;
   } else {
     nowServingNoEl.textContent = safeText(now.orderId, "ORD-????");
-    const itemsCount = Array.isArray(now.items) ? now.items.length : 0;
-    nowServingHintEl.textContent = `Serving ${itemsCount} item(s).`;
+    nowServingHintEl.textContent = `Serving 1 item (${safeText(now.itemName, "Item")}).`; // ✅ item-level
 
     prevBtn.disabled = nowIndex <= 0;
     nextBtn.disabled = nowIndex >= activeOrders.length - 1;
   }
 
-  // RIGHT: New Orders list + Completed button
+  // RIGHT: Orders list + Completed button
   if (activeOrders.length === 0) {
     ordersListEl.innerHTML = `<div class="empty">No new orders.</div>`;
   } else {
@@ -116,33 +111,72 @@ function render() {
         </div>
 
         <ul class="items">
-          <li>${safeText(o.itemName, "Item")} × ${safeText(o.qty, 1)}</li>
+          <li>
+            ${safeText(o.itemName, "Item")} × ${safeText(o.qty, 1)}
+            <div class="subtext">
+              ${o.takeaway ? "🥡 Takeaway" : "🍽 Dine-in"}
+            </div>
+          </li>
         </ul>
 
 
-        <div style="margin-top:10px; display:flex; gap:10px;">
-          <button class="btnDark" data-complete="${o.docId}">Completed</button>
+        <div class="orderActions">
+          <button class="btnDark"
+            data-doc="${o.docId}"
+            data-index="${o.itemIndex}">
+            Completed
+          </button>
         </div>
       </div>
     `).join("");
 
-    document.querySelectorAll("[data-complete]").forEach(btn => {
+    document.querySelectorAll('button[data-doc]').forEach(btn => {
       btn.addEventListener("click", async () => {
-        const docId = btn.getAttribute("data-complete");
-        await markCompleted(docId);
+        const docId = btn.dataset.doc;
+        const itemIndex = Number(btn.dataset.index);
+
+        console.log("Complete clicked:", { docId, itemIndex });
+
+        await markCompleted(docId, itemIndex);
       });
     });
   }
 }
 
-async function markCompleted(docId) {
-  const ref = doc(db, "orders", docId);
-  await updateDoc(ref, {
-    statusText: "Completed",
-    statusIndex: 2,
-    completedAt: serverTimestamp()
-  });
+// ---------- Complete ONE item ----------
+async function markCompleted(docId, itemIndex) {
+  try {
+    const ref = doc(db, "orders", docId);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return;
 
+    const data = snap.data();
+    const items = Array.isArray(data.items) ? data.items : [];
+
+    if (!Number.isInteger(itemIndex) || itemIndex < 0 || itemIndex >= items.length) {
+      console.error("Invalid itemIndex:", itemIndex, "items length:", items.length);
+      return;
+    }
+
+    // ✅ mark only this item completed
+    items[itemIndex] = { ...items[itemIndex], completed: true };
+
+    // Optional: set order completed if ALL items completed
+    const allDone = items.length > 0 && items.every(it => it.completed === true);
+
+    await updateDoc(ref, {
+      items,
+      ...(allDone ? {
+        statusText: "Completed",
+        statusIndex: 2,
+        completedAt: serverTimestamp()
+      } : {})
+    });
+
+    console.log("Item marked completed OK:", { docId, itemIndex, allDone });
+  } catch (err) {
+    console.error("markCompleted failed:", err);
+  }
 }
 
 // Prev/Next changes serving order (UI only)
@@ -155,37 +189,35 @@ nextBtn.addEventListener("click", () => {
   render();
 });
 
-// Listen to Firebase orders in real-time
-// Sort by createdAt so queue is oldest -> newest
+// ---------- Firestore realtime ----------
 const ordersQuery = query(collection(db, "orders"), orderBy("createdAt", "asc"));
 
 onSnapshot(ordersQuery, (snapshot) => {
   const all = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 
-  // RESET queue
   activeOrders = [];
 
   all.forEach(order => {
-    // ignore completed orders
-    if ((order.statusText ?? "") === "Completed") return;
-
-    // only take items that belong to THIS stall
     if (!Array.isArray(order.items)) return;
 
-    order.items
-      .filter(it => it.stall === decodeURIComponent(selectedStall))
-      .forEach(it => {
+    order.items.forEach((it, index) => {
+      const sameStall = it.stall === stallName;
+      const notDone = it.completed !== true;
+
+      if (sameStall && notDone) {
         activeOrders.push({
-          docId: order.id,           // Firestore document ID
-          orderId: order.orderId,    // ORD-7764
+          docId: order.id,
+          orderId: order.orderId,
+          itemIndex: index,
           itemName: it.name,
-          qty: it.qty,
-          statusText: order.statusText
+          qty: it.qty ?? 1,
+          statusText: order.statusText,
+          takeaway: !!order.addons?.takeaway 
         });
-      });
+      }
+    });
   });
 
   clampNowIndex();
   render();
 });
-

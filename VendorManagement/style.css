@@ -1,4 +1,4 @@
-gitbody {
+body {
     font-family: Arial, sans-serif;
     background: #f1faee;
     margin: 0;
@@ -25,7 +25,17 @@ input, button {
 }
 
 button {
-    background-color: #264653;
+    background-color: #264653;git
     color: white;
     border: none;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
+}
+
+.form-row label {
+  margin-bottom: 5px;
 }

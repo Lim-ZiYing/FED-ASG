@@ -1,39 +1,54 @@
-let menuItems = JSON.parse(localStorage.getItem("menuItems")) || [];
+import { auth, db } from "./firebase.js";
 
-document.getElementById("menuForm").addEventListener("submit", function(e){
-    e.preventDefault();
+import { 
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  doc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    let item = {
-        id: Date.now(),
-        name: itemName.value,
-        price: parseFloat(itemPrice.value),
-        cuisines: itemCuisine.value.split(",").map(c => c.trim())
-    };
+const STALL_ID = "demoStall";   // 🔥 Fixed stall
 
-    menuItems.push(item);
-    localStorage.setItem("menuItems", JSON.stringify(menuItems));
-    displayMenu();
-    this.reset();
+document.getElementById("menuForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  await addDoc(collection(db, "stalls", STALL_ID, "items"), {
+    name: itemName.value,
+    price: parseFloat(itemPrice.value),
+    cuisines: itemCuisine.value.split(",").map(c => c.trim()),
+    createdAt: new Date()
+  });
+
+  e.target.reset();
+  loadMenu();
 });
 
-function displayMenu(){
-    let list = document.getElementById("menuList");
-    list.innerHTML = "";
+async function loadMenu(){
 
-    menuItems.forEach(item => {
-        let li = document.createElement("li");
-        li.innerHTML = `
-            ${item.name} - $${item.price} 
-            <button onclick="deleteItem(${item.id})">Delete</button>
-        `;
-        list.appendChild(li);
-    });
+  menuList.innerHTML = "";
+
+  const snapshot = await getDocs(
+    collection(db, "stalls", STALL_ID, "items")
+  );
+
+  snapshot.forEach(docSnap => {
+
+    const item = docSnap.data();
+
+    const li = document.createElement("li");
+    li.innerHTML = `
+      ${item.name} - $${item.price}
+      <button onclick="deleteItem('${docSnap.id}')">Delete</button>
+    `;
+
+    menuList.appendChild(li);
+  });
 }
 
-function deleteItem(id){
-    menuItems = menuItems.filter(item => item.id !== id);
-    localStorage.setItem("menuItems", JSON.stringify(menuItems));
-    displayMenu();
-}
+window.deleteItem = async (id) => {
+  await deleteDoc(doc(db, "stalls", STALL_ID, "items", id));
+  loadMenu();
+};
 
-displayMenu();
+loadMenu();

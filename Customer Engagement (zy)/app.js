@@ -38,22 +38,31 @@ const STALLS = [
 
 
 const MENU_BY_STALL = {
-  stall_ah_hock: [
-    { id:"chicken_rice", name:"Chicken Rice", price:5.00, cuisine:"Chinese" },
-    { id:"roast_pork", name:"Roasted Pork Rice", price:5.50, cuisine:"Chinese" },
-    { id:"wanton_noodles", name:"Wanton Noodles", price:4.50, cuisine:"Noodles" }
+  S001: [
+    { id: "cr_steamed", name: "Steamed Chicken Rice", price: 4.0, cuisine: "Chinese" },
+    { id: "cr_roasted", name: "Roasted Chicken Rice", price: 4.5, cuisine: "Chinese" },
+    { id: "charsiew", name: "Char Siew Rice", price: 4.8, cuisine: "Chinese" }
   ],
-  stall_mala: [
-    { id:"mala_bowl", name:"Mala Bowl", price:6.50, cuisine:"Spicy" },
-    { id:"mala_noodles", name:"Mala Noodles", price:5.80, cuisine:"Spicy" },
-    { id:"ice_lemon_tea", name:"Ice Lemon Tea", price:2.00, cuisine:"Drink" }
+
+  S002: [
+    { id: "mee_pok", name: "Mee Pok", price: 4.0, cuisine: "Chinese" },
+    { id: "mee_kia", name: "Mee Kia", price: 4.0, cuisine: "Chinese" }
   ],
-  stall_prata: [
-    { id:"plain_prata", name:"Plain Prata", price:1.50, cuisine:"Indian" },
-    { id:"egg_prata", name:"Egg Prata", price:2.20, cuisine:"Indian" },
-    { id:"teh_tarikk", name:"Teh Tarik", price:1.80, cuisine:"Drink" }
+
+  S003: [
+    { id: "chicken_curry", name: "Chicken Curry", price: 5.5, cuisine: "Indian" },
+    { id: "mutton_curry", name: "Mutton Curry", price: 6.5, cuisine: "Indian" }
+  ],
+
+  S004: [
+    { id: "veg_rice", name: "Vegetarian Rice", price: 4.5, cuisine: "Vegetarian" }
+  ],
+
+  S005: [
+    { id: "nasi_pandang", name: "Nasi Padang", price: 6.0, cuisine: "Indonesian" }
   ]
 };
+
 
 /* =============================
    Language (simple)

@@ -1,6 +1,6 @@
-import { auth, db } from "./firebase.js";
+import { db } from "./firebase.js";
 
-import { 
+import {
   collection,
   addDoc,
   getDocs,
@@ -8,29 +8,51 @@ import {
   doc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-const STALL_ID = "demoStall";   // 🔥 Fixed stall
+const STALL_ID = "demoStall";
 
-document.getElementById("menuForm").addEventListener("submit", async (e) => {
+
+// ADD ITEM
+document.getElementById("menuForm")
+.addEventListener("submit", async (e) => {
+
   e.preventDefault();
 
-  await addDoc(collection(db, "stalls", STALL_ID, "items"), {
-    name: itemName.value,
-    price: parseFloat(itemPrice.value),
-    cuisines: itemCuisine.value.split(",").map(c => c.trim()),
-    createdAt: new Date()
-  });
+  const name = document.getElementById("itemName").value;
+  const price = parseFloat(document.getElementById("itemPrice").value);
+  const cuisines = document.getElementById("itemCuisine").value
+                    .split(",")
+                    .map(c => c.trim());
 
-  e.target.reset();
-  loadMenu();
+  try {
+
+    const docRef = await addDoc(
+      collection(db, "stalls", STALL_ID, "items"),
+      {
+        name,
+        price,
+        cuisines,
+        createdAt: new Date()
+      }
+    );
+
+    console.log("Item added with ID:", docRef.id);
+
+    e.target.reset();
+    loadMenu();
+
+  } catch(error){
+    alert(error.message);
+  }
 });
 
+
+// LOAD MENU
 async function loadMenu(){
 
-  menuList.innerHTML = "";
+  document.getElementById("menuList").innerHTML = "";
 
-  const snapshot = await getDocs(
-    collection(db, "stalls", STALL_ID, "items")
-  );
+  const snapshot =
+    await getDocs(collection(db, "stalls", STALL_ID, "items"));
 
   snapshot.forEach(docSnap => {
 
@@ -42,12 +64,16 @@ async function loadMenu(){
       <button onclick="deleteItem('${docSnap.id}')">Delete</button>
     `;
 
-    menuList.appendChild(li);
+    document.getElementById("menuList").appendChild(li);
   });
 }
 
+
+// DELETE
 window.deleteItem = async (id) => {
+
   await deleteDoc(doc(db, "stalls", STALL_ID, "items", id));
+
   loadMenu();
 };
 

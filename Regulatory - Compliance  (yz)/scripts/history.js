@@ -41,17 +41,16 @@ async function loadHistory() {
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td>${dateText}</td>
-        <td>${r.stallId} - ${r.stallName}</td>
-        <td>${r.officer}</td>
-        <td>${r.total}</td>
-        <td>${r.grade}</td>
-        <td>
-          <button onclick="location.href='dashboard.html?id=${r.id}'">
-            View
-          </button>
-        </td>
-      `;
+      <td data-label="Date">${dateText}</td>
+      <td data-label="Stall">${r.stallId} - ${r.stallName}</td>
+      <td data-label="Officer">${r.officer}</td>
+      <td data-label="Score">${r.total}</td>
+      <td data-label="Grade">${r.grade}</td>
+      <td data-label="Action">
+        <button onclick="location.href='dashboard.html?id=${r.id}'">View</button>
+      </td>
+    `;
+
 
       historyBody.appendChild(tr);
     });

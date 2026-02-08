@@ -71,17 +71,13 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
 
         const userData = userSnap.data();
 
-        // 🔥 REDIRECT BASED ON ROLE
-        if (userData.role === "vendor") {
-            window.location.href = "../vendor.html";
-        }
-        else if (userData.role === "nea" || userData.role === "NEA Officer") {
-            window.location.href = "../officer.html";
-        }
-        else if (userData.role === "patron") {
-            window.location.href = "../Customer Engagement (zy)/index.html";
-        }
-
+        // REDIRECT BASED ON ROLE
+      if (userData.role === "Vendor") {
+    window.location.href = "../vendor.html";
+}
+else if (userData.role === "NEA Officer") {
+    window.location.href = "../officer.html";
+}
     } catch (error) {
         alert(error.message);
     }
